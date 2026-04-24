@@ -41,27 +41,27 @@ export class ConfirmarViajeClienteUseCase {
   private async iniciarBusquedaPorRondas(viajeId: string) {
     console.log(`[MatchingEngine] Iniciando rondas para viaje: ${viajeId}`);
 
-    // Obtenemos el GeoJSON de la ruta una sola vez para todas las rondas
     let rutaCoords: any[] = [];
     let tiempoEstimado = 10;
     try {
       const v = await this.viajeRepository.buscarPorId(viajeId);
       if (v) {
+        // RUTA PRINCIPAL: Origen -> Destino del cliente
         const mapa = await this.consultarRutaMapa.execute({ origen: v.origen, destino: v.destino });
         tiempoEstimado = mapa.tiempo_minutos || 10;
         
-        // Extraemos las coordenadas puras del GeoJSON para que la APK las pinte directo
-        if (mapa.geojson?.features?.[0]?.geometry?.coordinates) {
-          rutaCoords = mapa.geojson.features[0].geometry.coordinates;
+        // Aplanar el GeoJSON antes de guardar (Requerimiento IrGo_Backend)
+        if (mapa.geojson?.features) {
+          rutaCoords = mapa.geojson.features.flatMap((f: any) => f.geometry.coordinates);
           
-          // PERSISTENCIA: Guardamos la ruta en el objeto viaje para que quede en BD
+          // PERSISTENCIA: Guardamos la ruta del viaje (origen -> destino)
           v.ruta = rutaCoords;
           v.tiempo_min = tiempoEstimado;
           await this.viajeRepository.actualizar(v);
         }
       }
     } catch (e) {
-      console.error("[MatchingEngine] Error obteniendo datos de mapa para oferta:", e);
+      console.error("[MatchingEngine] Error obteniendo ruta origen->destino:", e);
     }
 
     // RONDA 1: Los 5 más cercanos
@@ -95,16 +95,32 @@ export class ConfirmarViajeClienteUseCase {
     console.log(`[MatchingEngine] Conductores encontrados para tipo ${viaje.tipo_vehiculo}: ${conductores.length}`);
 
     for (const cond of conductores) {
-      if (!cond.id) continue;
+      if (!cond.id || !cond.ubicacion_actual) continue;
       
+      let rutaRecogidaCoords: any[] = [];
+      try {
+        // RUTA RECOGIDA: GPS Conductor -> Origen Cliente
+        const mapaRecogida = await this.consultarRutaMapa.execute({ 
+          origen: cond.ubicacion_actual, 
+          destino: viaje.origen 
+        });
+
+        if (mapaRecogida.geojson?.features) {
+          rutaRecogidaCoords = mapaRecogida.geojson.features.flatMap((f: any) => f.geometry.coordinates);
+        }
+      } catch (e) {
+        console.error(`[MatchingEngine] No se pudo calcular ruta de recogida para conductor ${cond.id}:`, e);
+      }
+
       const oferta = new OfertaViajeConductorDto(
         viaje,
         Number((viaje.precio! * 0.85).toFixed(2)), // 15% Comisión
         viaje.distancia_km || 0,
-        tiempoEstimado // Tiempo real calculado por MapsAPI
+        tiempoEstimado // Tiempo real calculado por MapsAPI (Origen->Destino)
       );
 
-      oferta.ruta = ruta; // Array de coordenadas [[lon, lat], ...]
+      oferta.ruta = ruta; // Origen -> Destino
+      oferta.ruta_recogida = rutaRecogidaCoords; // Conductor -> Origen
 
       emitirOfertaViaje(cond.id, oferta);
     }
