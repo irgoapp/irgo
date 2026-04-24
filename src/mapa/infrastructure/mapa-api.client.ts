@@ -3,12 +3,12 @@ import { Mapa } from '../domain/mapa.entity';
 
 export class MapaApiClient implements IMapaRepository {
   // Usamos el nombre exacto de la variable que pusiste en Railway
-  private apiUrl = process.env.MAPS_API_URL || 'taxi-libre-production.up.railway.app';
+  private apiUrl = process.env.MAPS_API_URL || process.env.NEXT_PUBLIC_MAPS_API_URL || 'taxi-libre-production.up.railway.app';
 
   async calcularRuta(origen: { lat: number, lon: number }, destino: { lat: number, lon: number }): Promise<Mapa> {
     try {
       const host = this.apiUrl.startsWith('http') ? this.apiUrl : `https://${this.apiUrl}`;
-      const url = `${host}/api/maps/calculate-route`;
+      const url = `${host}/api/rutas/calcular`;
 
       console.log(`[MapaApiClient] Consultando Ruta Oficial en: ${url}`);
 
