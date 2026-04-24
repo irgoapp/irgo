@@ -67,9 +67,11 @@ export class SupabaseViajeRepository implements IViajeRepository {
     return {
       cliente_id: v.cliente_id,
       conductor_id: v.conductor_id,
+      origen: `POINT(${v.origen.lon} ${v.origen.lat})`,
       origen_lat: v.origen.lat,
       origen_lng: v.origen.lon,
       origen_texto: v.origen_texto,
+      destino: v.destino ? `POINT(${v.destino.lon} ${v.destino.lat})` : null,
       destino_lat: v.destino?.lat,
       destino_lng: v.destino?.lon,
       destino_texto: v.destino_texto,
