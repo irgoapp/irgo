@@ -27,6 +27,10 @@ export class MapaApiClient implements IMapaRepository {
       }
 
       const data = await response.json();
+      
+      console.log('[MapaApiClient] data recibida:', JSON.stringify(data));
+      console.log('[MapaApiClient] distancia_km:', data.distanceKm);
+      console.log('[MapaApiClient] durationMin:', data.durationMin);
 
       return new Mapa({
         origen,
