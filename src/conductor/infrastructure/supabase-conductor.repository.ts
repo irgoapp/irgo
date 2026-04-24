@@ -48,7 +48,7 @@ export class SupabaseConductorRepository implements IConductorRepository {
     // Buscar en Supabase conductores disponibles
     const { data: drivers, error } = await supabaseClient
       .from('conductores')
-      .select('id, ubicacion, disponible, vehiculo_tipo, calificacion, usuario_id')
+      .select('id, ubicacion, disponible, vehiculo_tipo')
       .eq('disponible', true)
       .eq('vehiculo_tipo', tipoVehiculo);
 
