@@ -34,7 +34,14 @@ export class SupabaseConductorRepository implements IConductorRepository {
     return true;
   }
 
-  async buscarCercanosDisponibles(lat: number, lon: number, radioKm: number, tipoVehiculo: string): Promise<Conductor[]> {
+  async buscarCercanosDisponibles(
+    lat: number, 
+    lon: number, 
+    radioKm: number, 
+    tipoVehiculo: string,
+    limite: number = 10,
+    offset: number = 0
+  ): Promise<Conductor[]> {
     // Buscar en Supabase conductores disponibles
     const { data: drivers, error } = await supabaseClient
       .from('conductores')
@@ -44,9 +51,9 @@ export class SupabaseConductorRepository implements IConductorRepository {
 
     if (error) throw new Error(error.message);
     
-    // (Simplificación de la lógica geo-espacial usando PostGIS)
-    // El radio se evaluaría nativamente o tras parsearlo, como en tu viejo backend
-    const cercanos = (drivers || []).map((d: any) => new Conductor(d));
-    return cercanos;
+    // Por ahora devolvemos el slice para las rondas.
+    // Tip: En producción esto debería ser una función RPC en Postgres para eficiencia máxima.
+    const slice = (drivers || []).slice(offset, offset + limite);
+    return slice.map((d: any) => new Conductor(d));
   }
 }
