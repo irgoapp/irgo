@@ -75,6 +75,7 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
   fastify.post('/cotizar', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const { origen, destino, tipo } = request.body as any;
+      console.log(`[ViajeController] 💰 Cotizando viaje: ${tipo} (${origen.lat},${origen.lon}) -> (${destino.lat},${destino.lon})`);
       const cotizacion = await cotizarViajeUseCase.execute({
         origen,
         destino,
@@ -117,6 +118,7 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
 
   fastify.post('/:id/confirmar', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
     try {
+      console.log(`[ViajeController] ✅ Confirmando viaje ID: ${request.params.id}`);
       const dto = new ConfirmarViajeDto({ 
         viaje_id: request.params.id, 
         ...(request.body as any) 
@@ -124,6 +126,7 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
       const viaje = await confirmarViajePasajeroUseCase.execute(dto);
       return reply.code(200).send(viaje);
     } catch (error: any) {
+      console.error(`[ViajeController] ❌ Error confirmando viaje ${request.params.id}:`, error.message);
       return reply.code(400).send({ error: error.message });
     }
   });
