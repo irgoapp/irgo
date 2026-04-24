@@ -1,4 +1,4 @@
-import { IConductorRepository } from '../domain/conductor.repository';
+import { IConductorRepository } from '../domain/conductor.repository'; // Fresh build trigger
 import { Conductor } from '../domain/conductor.entity';
 import { supabaseClient } from '../../shared/supabase.client';
 
