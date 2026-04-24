@@ -42,28 +42,34 @@ export class ConfirmarViajeClienteUseCase {
     console.log(`[MatchingEngine] Iniciando rondas para viaje: ${viajeId}`);
 
     // Obtenemos el GeoJSON de la ruta una sola vez para todas las rondas
-    let geojson: any = null;
+    let rutaCoords: any[] = [];
+    let tiempoEstimado = 10;
     try {
       const v = await this.viajeRepository.buscarPorId(viajeId);
       if (v) {
         const mapa = await this.consultarRutaMapa.execute({ origen: v.origen, destino: v.destino });
-        geojson = mapa.geojson;
+        tiempoEstimado = mapa.tiempo_minutos || 10;
+        
+        // Extraemos las coordenadas puras del GeoJSON para que la APK las pinte directo
+        if (mapa.geojson?.features?.[0]?.geometry?.coordinates) {
+          rutaCoords = mapa.geojson.features[0].geometry.coordinates;
+        }
       }
     } catch (e) {
-      console.error("[MatchingEngine] Error obteniendo GeoJSON para oferta:", e);
+      console.error("[MatchingEngine] Error obteniendo datos de mapa para oferta:", e);
     }
 
     // RONDA 1: Los 5 más cercanos
-    await this.ejecutarRonda(viajeId, 5, 0, geojson);
+    await this.ejecutarRonda(viajeId, 5, 0, rutaCoords, tiempoEstimado);
 
     // ESPERA 10 SEGUNDOS
     setTimeout(async () => {
       // RONDA 2: Los siguientes 10
-      await this.ejecutarRonda(viajeId, 10, 5, geojson);
+      await this.ejecutarRonda(viajeId, 10, 5, rutaCoords, tiempoEstimado);
     }, 10000);
   }
 
-  private async ejecutarRonda(viajeId: string, limite: number, offset: number, geojson: any) {
+  private async ejecutarRonda(viajeId: string, limite: number, offset: number, ruta: any[], tiempoEstimado: number) {
     console.log(`[MatchingEngine] Ejecutando Ronda (L:${limite}, O:${offset}) para viaje ${viajeId}`);
     const viaje = await this.viajeRepository.buscarPorId(viajeId);
     
@@ -90,10 +96,10 @@ export class ConfirmarViajeClienteUseCase {
         viaje,
         Number((viaje.precio! * 0.85).toFixed(2)), // 15% Comisión
         viaje.distancia_km || 0,
-        viaje.tiempo_min || 0
+        tiempoEstimado // Tiempo real calculado por MapsAPI
       );
 
-      oferta.ruta = geojson;
+      oferta.ruta = ruta; // Array de coordenadas [[lon, lat], ...]
 
       emitirOfertaViaje(cond.id, oferta);
     }
