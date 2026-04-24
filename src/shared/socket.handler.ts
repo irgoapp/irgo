@@ -28,6 +28,12 @@ export function setupSocket(server: any) {
 
     // Le creamos una SALA VIP Privada solo para él
     socket.join(`conductor_${conductorId}`);
+    
+    // Automatización: Al conectar por socket, el conductor pasa a estar disponible en Supabase
+    conductorRepo.cambiarDisponibilidad(conductorId, true)
+      .then(() => console.log(`[Sockets] ✅ Conductor ${conductorId} disponible en Supabase`))
+      .catch(err => console.error(`Error activando disponibilidad para ${conductorId}`, err));
+
     console.log(`[Sockets] 🚕 Conductor ${conductorId} ONLINE en Socket: ${socket.id}`);
 
     // Escuchador de Ubicaciones en GPS Tiempo Real
@@ -52,8 +58,16 @@ export function setupSocket(server: any) {
       console.log(`[Sockets] 📱 Cliente unido a sala de viaje: ${tripId}`);
     });
 
-    socket.on('disconnect', () => {
-      console.log(`[Sockets] 🔴 Desconexión: ${socket.id}`);
+    socket.on('disconnect', async () => {
+      console.log(`[Sockets] 🔴 Desconexión: ${socket.id} (Conductor: ${conductorId})`);
+      
+      // Automatización: Al desconectar, el conductor pasa a NO estar disponible
+      try {
+        await conductorRepo.cambiarDisponibilidad(conductorId, false);
+        console.log(`[Sockets] 🔴 Conductor ${conductorId} no disponible en Supabase`);
+      } catch (err) {
+        console.error(`Error desactivando disponibilidad para ${conductorId}`, err);
+      }
     });
   });
 
