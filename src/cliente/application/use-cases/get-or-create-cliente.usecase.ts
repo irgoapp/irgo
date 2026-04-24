@@ -12,7 +12,7 @@ export class GetOrCreateClienteUseCase {
     if (!cliente) {
       cliente = new Cliente({
         telefono: limpio,
-        nombre: dto.nombre || 'Pasajero Nuevo',
+        nombre: dto.nombre || 'Cliente Nuevo',
       });
       cliente = await this.clienteRepository.crear(cliente);
     }

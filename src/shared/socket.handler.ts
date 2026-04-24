@@ -62,7 +62,7 @@ export function setupSocket(server: any) {
 }
 
 /**
- * Función global para que tu módulo de VIAJES pueda 
+ * Función global para que tu módulo de SOLICITUDES pueda 
  * dispararle una oferta a un conductor en específico.
  */
 export function emitirOfertaViaje(conductorId: string, oferta: any) {

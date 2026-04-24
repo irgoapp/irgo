@@ -6,7 +6,7 @@ import { ViajeResponseDto } from '../application/dto/out/viaje-response.dto';
 import { SolicitarViajeUseCase } from '../application/use-cases/solicitar-viaje.usecase';
 import { AceptarViajeUseCase } from '../application/use-cases/aceptar-viaje.usecase';
 import { CotizarViajeUseCase } from '../application/use-cases/cotizar-viaje.usecase';
-import { ConfirmarViajePasajeroUseCase } from '../application/use-cases/confirmar-viaje-pasajero.usecase';
+import { ConfirmarViajeClienteUseCase } from '../application/use-cases/confirmar-viaje-cliente.usecase';
 import { CancelarViajeUseCase } from '../application/use-cases/cancelar-viaje.usecase';
 import { ObtenerViajeUseCase } from '../application/use-cases/obtener-viaje.usecase';
 import { CalificarViajeUseCase } from '../application/use-cases/calificar-viaje.usecase';
@@ -31,7 +31,7 @@ const calcularClientePrecioUseCase = new CalcularClientePrecioUseCase(precioRepo
 const solicitarViajeUseCase = new SolicitarViajeUseCase(viajeRepository, conductorRepository);
 const aceptarViajeUseCase = new AceptarViajeUseCase(viajeRepository);
 const cotizarViajeUseCase = new CotizarViajeUseCase(consultarRutaMapaUseCase, calcularClientePrecioUseCase);
-const confirmarViajePasajeroUseCase = new ConfirmarViajePasajeroUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase);
+const confirmarViajeClienteUseCase = new ConfirmarViajeClienteUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase);
 const cancelarViajeUseCase = new CancelarViajeUseCase(viajeRepository);
 const obtenerViajeUseCase = new ObtenerViajeUseCase(viajeRepository);
 const calificarViajeUseCase = new CalificarViajeUseCase(viajeRepository);
@@ -123,7 +123,7 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
         viaje_id: request.params.id, 
         ...(request.body as any) 
       });
-      const viaje = await confirmarViajePasajeroUseCase.execute(dto);
+      const viaje = await confirmarViajeClienteUseCase.execute(dto);
       return reply.code(200).send(viaje);
     } catch (error: any) {
       console.error(`[ViajeController] ❌ Error confirmando viaje ${request.params.id}:`, error.message);

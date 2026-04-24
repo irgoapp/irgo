@@ -6,7 +6,7 @@ import { ConfirmarViajeDto } from '../dto/in/confirmar-viaje.dto';
 import { ViajeResponseDto } from '../dto/out/viaje-response.dto';
 import { ConsultarRutaMapaUseCase } from '../../../mapa/application/use-cases/consultar-ruta-mapa.usecase';
 
-export class ConfirmarViajePasajeroUseCase {
+export class ConfirmarViajeClienteUseCase {
   constructor(
     private viajeRepository: IViajeRepository,
     private conductorRepository: IConductorRepository,
