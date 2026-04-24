@@ -63,6 +63,7 @@ export class ConfirmarViajePasajeroUseCase {
   }
 
   private async ejecutarRonda(viajeId: string, limite: number, offset: number, geojson: any) {
+    console.log(`[MatchingEngine] Ejecutando Ronda (L:${limite}, O:${offset}) para viaje ${viajeId}`);
     const viaje = await this.viajeRepository.buscarPorId(viajeId);
     
     if (!viaje || viaje.estado !== 'buscando') {
@@ -78,6 +79,8 @@ export class ConfirmarViajePasajeroUseCase {
       limite,
       offset
     );
+    
+    console.log(`[MatchingEngine] Conductores encontrados para tipo ${viaje.tipo_vehiculo}: ${conductores.length}`);
 
     for (const cond of conductores) {
       if (!cond.id) continue;

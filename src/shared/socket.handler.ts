@@ -68,6 +68,7 @@ export function setupSocket(server: any) {
 export function emitirOfertaViaje(conductorId: string, oferta: any) {
   if (ioInstance) {
     ioInstance.to(`conductor_${conductorId}`).emit('NUEVA_SOLICITUD', oferta);
+    console.log(`[Sockets] 📨 OFERTA_VIAJE enviada al conductor ${conductorId}`);
     return true;
   }
   return false;
