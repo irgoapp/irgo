@@ -4,6 +4,7 @@ import { ActualizarUbicacionConductorUseCase } from '../conductor/application/us
 import { ActualizarUbicacionDto } from '../conductor/application/dto/in/actualizar-ubicacion.dto';
 
 let ioInstance: Server;
+const disconnectTimers = new Map<string, NodeJS.Timeout>();
 
 export function setupSocket(server: any) {
   const io = new Server(server, {
@@ -17,7 +18,6 @@ export function setupSocket(server: any) {
   const ubicationCase = new ActualizarUbicacionConductorUseCase(conductorRepo);
 
   io.on('connection', (socket) => {
-    // Extraemos de forma nativa el Auth que configuró Gemini en Flutter
     const conductorId = socket.handshake.auth.conductor_id;
 
     if (!conductorId) {
@@ -26,10 +26,16 @@ export function setupSocket(server: any) {
       return;
     }
 
-    // Le creamos una SALA VIP Privada solo para él
+    // Si reconecta antes de los 15 segundos cancela el timer de desconexión
+    if (disconnectTimers.has(conductorId)) {
+      clearTimeout(disconnectTimers.get(conductorId)!);
+      disconnectTimers.delete(conductorId);
+      console.log(`[Sockets] ✅ Conductor ${conductorId} reconectó a tiempo`);
+    }
+
     socket.join(`conductor_${conductorId}`);
     
-    // Automatización: Al conectar por socket, el conductor pasa a estar disponible en Supabase
+    // Automatización: Al conectar por socket, el conductor pasa a estar disponible
     conductorRepo.cambiarDisponibilidad(conductorId, true)
       .then(() => console.log(`[Sockets] ✅ Conductor ${conductorId} disponible en Supabase`))
       .catch(err => console.error(`Error activando disponibilidad para ${conductorId}`, err));
@@ -39,7 +45,6 @@ export function setupSocket(server: any) {
     // Escuchador de Ubicaciones en GPS Tiempo Real
     socket.on('actualizar_ubicacion', async (payload: { lat: number; lon: number }) => {
        try {
-         // Cuando Flutter manda esto, sin usar HTTP pesado, guardamos en base de datos.
          const dto = new ActualizarUbicacionDto({
            conductor_id: conductorId, 
            lat: payload.lat, 
@@ -52,22 +57,25 @@ export function setupSocket(server: any) {
     });
 
     // --- CLIENTE WEB ---
-    // Unirse a una sala específica de viaje para recibir actualizaciones
     socket.on('join_trip', (tripId: string) => {
       socket.join(`trip_${tripId}`);
       console.log(`[Sockets] 📱 Cliente unido a sala de viaje: ${tripId}`);
     });
 
     socket.on('disconnect', async () => {
-      console.log(`[Sockets] 🔴 Desconexión: ${socket.id} (Conductor: ${conductorId})`);
+      console.log(`[Sockets] ⚠️ Desconexión detectada: ${conductorId}`);
       
-      // Automatización: Al desconectar, el conductor pasa a NO estar disponible
-      try {
-        await conductorRepo.cambiarDisponibilidad(conductorId, false);
-        console.log(`[Sockets] 🔴 Conductor ${conductorId} no disponible en Supabase`);
-      } catch (err) {
-        console.error(`Error desactivando disponibilidad para ${conductorId}`, err);
-      }
+      const timer = setTimeout(async () => {
+        try {
+          await conductorRepo.cambiarDisponibilidad(conductorId, false);
+          console.log(`[Sockets] 🔴 Conductor ${conductorId} no disponible (timeout)`);
+        } catch (err) {
+          console.error(`Error desactivando conductor ${conductorId}`, err);
+        }
+        disconnectTimers.delete(conductorId);
+      }, 15000); // 15 segundos de gracia
+      
+      disconnectTimers.set(conductorId, timer);
     });
   });
 
