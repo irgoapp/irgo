@@ -3,7 +3,7 @@ import { Mapa } from '../domain/mapa.entity';
 
 export class MapaApiClient implements IMapaRepository {
   // Usamos el nombre exacto de la variable que pusiste en Railway
-  private apiUrl = process.env.NEXT_PUBLIC_MAPS_API_URL || 'taxi-libre-production.up.railway.app';
+  private apiUrl = process.env.MAPS_API_URL || process.env.NEXT_PUBLIC_MAPS_API_URL || 'taxi-libre-production.up.railway.app';
 
   async calcularRuta(origen: { lat: number, lon: number }, destino: { lat: number, lon: number }): Promise<Mapa> {
     try {
@@ -37,8 +37,11 @@ export class MapaApiClient implements IMapaRepository {
       });
 
     } catch (e: any) {
-      console.error('[MapaApiClient] Error:', e);
-      throw new Error('Fallo al conectar con el Microservicio de Mapas (PROD): ' + e.message);
+      console.error('[MapaApiClient] Error al conectar con el servidor de mapas:', e.message);
+      if (e.message.includes('502')) {
+        throw new Error('El Microservicio de Mapas está temporalmente fuera de servicio (502). Verifica el despliegue en Railway.');
+      }
+      throw new Error('Error de conexión con Mapas: ' + e.message);
     }
   }
 }
