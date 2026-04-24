@@ -23,7 +23,8 @@ export class ConfirmarViajePasajeroUseCase {
     viaje.destino_texto = dto.destino_texto;
     viaje.precio = dto.monto;
     viaje.distancia_km = dto.distancia_km;
-    viaje.estado = 'buscando'; // <--- Aquí es donde se activa para los conductores
+    viaje.estado = 'buscando';
+    viaje.buscando_at = new Date();
 
     const actualizado = await this.viajeRepository.actualizar(viaje);
     

@@ -41,7 +41,16 @@ export class SupabaseViajeRepository implements IViajeRepository {
       precio: data.monto_ruta,
       origen: { lat: data.origen_lat, lon: data.origen_lng },
       destino: { lat: data.destino_lat || 0, lon: data.destino_lng || 0 },
-      tipo_vehiculo: 'basico'
+      destino_texto: data.destino_texto,
+      distancia_km: data.distancia_ruta,
+      tipo_vehiculo: 'basico',
+      creado_en: new Date(data.created_at),
+      buscando_at: data.buscando_at,
+      asignado_at: data.asignado_at,
+      llegado_at: data.llegado_at,
+      iniciado_at: data.iniciado_at,
+      completado_at: data.completado_at,
+      cancelado_at: data.cancelado_at
     });
   }
 
@@ -49,7 +58,9 @@ export class SupabaseViajeRepository implements IViajeRepository {
     const updatePayload: any = { estado };
     const now = new Date().toISOString();
     
+    if (estado === 'buscando') updatePayload.buscando_at = now;
     if (estado === 'asignado') updatePayload.asignado_at = now;
+    if (estado === 'llegado') updatePayload.llegado_at = now;
     if (estado === 'en_curso') updatePayload.iniciado_at = now;
     if (estado === 'completado') updatePayload.completado_at = now;
     if (estado === 'cancelado') updatePayload.cancelado_at = now;
@@ -72,23 +83,24 @@ export class SupabaseViajeRepository implements IViajeRepository {
         destino_texto: viaje.destino_texto,
         monto_ruta: viaje.precio,
         estado: viaje.estado,
-        distancia_ruta: viaje.distancia_km
+        distancia_ruta: viaje.distancia_km,
+        buscando_at: viaje.buscando_at?.toISOString(),
+        asignado_at: viaje.asignado_at?.toISOString(),
+        llegado_at: viaje.llegado_at?.toISOString(),
+        iniciado_at: viaje.iniciado_at?.toISOString(),
+        completado_at: viaje.completado_at?.toISOString(),
+        cancelado_at: viaje.cancelado_at?.toISOString()
       })
       .eq('id', viaje.id)
       .select()
       .single();
 
     if (error) throw new Error(error.message);
-    return new Viaje({
-      ...viaje,
-      id: data.id,
-      estado: data.estado,
-      precio: data.monto_ruta
-    });
+    return this.buscarPorId(data.id) as any;
   }
 
   async actualizarConductor(id: string, conductorId: string): Promise<boolean> {
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from('solicitudes')
       .update({
         conductor_id: conductorId,
@@ -96,9 +108,13 @@ export class SupabaseViajeRepository implements IViajeRepository {
         estado: 'asignado'
       })
       .eq('id', id)
-      .eq('estado', 'buscando'); 
+      .eq('estado', 'buscando') // Bloqueo Atómico
+      .select();
 
     if (error) throw new Error(error.message);
+    if (!data || data.length === 0) {
+      throw new Error('EL_VIAJE_YA_NO_ESTA_DISPONIBLE');
+    }
     return true;
   }
 
