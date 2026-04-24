@@ -66,12 +66,12 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
   });
 
   // El endpoint maestro de cotización para que el cliente pase de llamar a Mapas a llamar al Backend
-  fastify.get('/cotizar', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/cotizar', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      const { olat, olng, dlat, dlng, tipo } = request.query as any;
+      const { origen, destino, tipo } = request.body as any;
       const cotizacion = await cotizarViajeUseCase.execute({
-        origen: { lat: Number(olat), lon: Number(olng) },
-        destino: { lat: Number(dlat), lon: Number(dlng) },
+        origen,
+        destino,
         tipo_vehiculo: tipo
       });
       return reply.code(200).send(cotizacion);
