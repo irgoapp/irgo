@@ -11,7 +11,13 @@ export class ViajeResponseDto {
   monto_ruta: number;
   distancia_ruta: number;
   conductor_id?: string;
-  conductores?: any; // Para compatibilidad con el hook useRealtimeTrip
+  conductores?: any;
+  buscando_at?: string;
+  asignado_at?: string;
+  llegado_at?: string;
+  iniciado_at?: string;
+  completado_at?: string;
+  cancelado_at?: string;
 
   constructor(viaje: Viaje) {
     this.id = viaje.id || '';
@@ -24,12 +30,17 @@ export class ViajeResponseDto {
     this.monto_ruta = viaje.precio || 0;
     this.distancia_ruta = viaje.distancia_km || 0;
     this.conductor_id = viaje.conductor_id;
+    this.buscando_at = viaje.buscando_at?.toISOString();
+    this.asignado_at = viaje.asignado_at?.toISOString();
+    this.llegado_at = viaje.llegado_at?.toISOString();
+    this.iniciado_at = viaje.iniciado_at?.toISOString();
+    this.completado_at = viaje.completado_at?.toISOString();
+    this.cancelado_at = viaje.cancelado_at?.toISOString();
     
     // Si hay conductor, preparamos el objeto anidado que busca el frontend
     if (viaje.conductor_id) {
        this.conductores = {
          id: viaje.conductor_id
-         // Se puede expandir con nombre/calificación si el repo los trae
        };
     }
   }

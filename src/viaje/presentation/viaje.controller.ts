@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from 'fastify';
 import { SolicitarViajeDto } from '../application/dto/in/solicitar-viaje.dto';
+import { ConfirmarViajeDto } from '../application/dto/in/confirmar-viaje.dto';
 import { AceptarViajeDto } from '../application/dto/in/aceptar-viaje.dto';
 import { ViajeResponseDto } from '../application/dto/out/viaje-response.dto';
 import { SolicitarViajeUseCase } from '../application/use-cases/solicitar-viaje.usecase';
@@ -116,23 +117,11 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
 
   fastify.post('/:id/confirmar', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
     try {
-      const { 
-        destino_lat, 
-        destino_lng, 
-        destino_texto, 
-        monto, 
-        distancia_km, 
-        duracion_min 
-      } = request.body as any;
-
-      const viaje = await confirmarViajePasajeroUseCase.execute({
-        viaje_id: request.params.id,
-        destino: { lat: destino_lat, lon: destino_lng }, // Maping de lat/lng a lat/lon
-        destino_texto,
-        monto,
-        distancia_km,
-        duracion_min
+      const dto = new ConfirmarViajeDto({ 
+        viaje_id: request.params.id, 
+        ...(request.body as any) 
       });
+      const viaje = await confirmarViajePasajeroUseCase.execute(dto);
       return reply.code(200).send(viaje);
     } catch (error: any) {
       return reply.code(400).send({ error: error.message });
