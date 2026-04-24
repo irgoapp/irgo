@@ -7,7 +7,6 @@ import { Viaje } from '../../../domain/viaje.entity';
  */
 export class OfertaViajeConductorDto {
   viaje_id: string;
-  tiempo_expiracion_segundos: number;
   
   // Datos Financieros 
   monto: number;
@@ -38,7 +37,6 @@ export class OfertaViajeConductorDto {
     tiempoRutaOrigenADestino: number
   ) {
     this.viaje_id = viaje.id!;
-    this.tiempo_expiracion_segundos = 15; // Tiempo estándar de plataforma The Uber/DiDi
     
     // Financiero
     this.monto = gananciaPura;
