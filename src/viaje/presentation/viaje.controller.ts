@@ -29,7 +29,7 @@ const consultarRutaMapaUseCase = new ConsultarRutaMapaUseCase(mapaRepository);
 const calcularClientePrecioUseCase = new CalcularClientePrecioUseCase(precioRepository);
 
 const solicitarViajeUseCase = new SolicitarViajeUseCase(viajeRepository, conductorRepository);
-const aceptarViajeUseCase = new AceptarViajeUseCase(viajeRepository);
+const aceptarViajeUseCase = new AceptarViajeUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase);
 const cotizarViajeUseCase = new CotizarViajeUseCase(consultarRutaMapaUseCase, calcularClientePrecioUseCase);
 const confirmarViajeClienteUseCase = new ConfirmarViajeClienteUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase);
 const cancelarViajeUseCase = new CancelarViajeUseCase(viajeRepository);

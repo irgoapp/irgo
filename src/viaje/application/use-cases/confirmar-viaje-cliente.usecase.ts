@@ -97,21 +97,6 @@ export class ConfirmarViajeClienteUseCase {
     for (const cond of conductores) {
       if (!cond.id || !cond.ubicacion_actual) continue;
       
-      let rutaRecogidaCoords: any[] = [];
-      try {
-        // RUTA RECOGIDA: GPS Conductor -> Origen Cliente
-        const mapaRecogida = await this.consultarRutaMapa.execute({ 
-          origen: cond.ubicacion_actual, 
-          destino: viaje.origen 
-        });
-
-        if (mapaRecogida.geojson?.features) {
-          rutaRecogidaCoords = mapaRecogida.geojson.features.flatMap((f: any) => f.geometry.coordinates);
-        }
-      } catch (e) {
-        console.error(`[MatchingEngine] No se pudo calcular ruta de recogida para conductor ${cond.id}:`, e);
-      }
-
       const oferta = new OfertaViajeConductorDto(
         viaje,
         Number((viaje.precio! * 0.85).toFixed(2)), // 15% Comisión
@@ -120,7 +105,6 @@ export class ConfirmarViajeClienteUseCase {
       );
 
       oferta.ruta = ruta; // Origen -> Destino
-      oferta.ruta_recogida = rutaRecogidaCoords; // Conductor -> Origen
 
       emitirOfertaViaje(cond.id, oferta);
     }

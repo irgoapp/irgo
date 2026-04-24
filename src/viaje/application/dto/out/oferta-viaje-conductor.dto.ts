@@ -25,7 +25,6 @@ export class OfertaViajeConductorDto {
   
   // Dibujo Polyline Cartográfica
   ruta?: any[];
-  ruta_recogida?: any[];
 
   // Datos de confianza del cliente
   cliente_nombre_corto: string;
