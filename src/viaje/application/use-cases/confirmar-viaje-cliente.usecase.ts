@@ -53,6 +53,11 @@ export class ConfirmarViajeClienteUseCase {
         // Extraemos las coordenadas puras del GeoJSON para que la APK las pinte directo
         if (mapa.geojson?.features?.[0]?.geometry?.coordinates) {
           rutaCoords = mapa.geojson.features[0].geometry.coordinates;
+          
+          // PERSISTENCIA: Guardamos la ruta en el objeto viaje para que quede en BD
+          v.ruta = rutaCoords;
+          v.tiempo_min = tiempoEstimado;
+          await this.viajeRepository.actualizar(v);
         }
       }
     } catch (e) {

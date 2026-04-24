@@ -18,6 +18,7 @@ export class Viaje {
   iniciado_at?: Date;
   completado_at?: Date;
   cancelado_at?: Date;
+  ruta?: any[];
 
   constructor(data: Partial<Viaje>) {
     this.id = data.id;
@@ -39,5 +40,6 @@ export class Viaje {
     this.iniciado_at = data.iniciado_at ? new Date(data.iniciado_at) : undefined;
     this.completado_at = data.completado_at ? new Date(data.completado_at) : undefined;
     this.cancelado_at = data.cancelado_at ? new Date(data.cancelado_at) : undefined;
+    this.ruta = data.ruta;
   }
 }

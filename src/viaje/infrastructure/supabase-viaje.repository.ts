@@ -84,7 +84,8 @@ export class SupabaseViajeRepository implements IViajeRepository {
       llegado_at: v.llegado_at?.toISOString(),
       iniciado_at: v.iniciado_at?.toISOString(),
       completado_at: v.completado_at?.toISOString(),
-      cancelado_at: v.cancelado_at?.toISOString()
+      cancelado_at: v.cancelado_at?.toISOString(),
+      ruta: v.ruta
     };
   }
 
@@ -108,7 +109,8 @@ export class SupabaseViajeRepository implements IViajeRepository {
       llegado_at: data.llegado_at,
       iniciado_at: data.iniciado_at,
       completado_at: data.completado_at,
-      cancelado_at: data.cancelado_at
+      cancelado_at: data.cancelado_at,
+      ruta: data.ruta
     });
   }
 
