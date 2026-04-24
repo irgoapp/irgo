@@ -116,10 +116,18 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
 
   fastify.post('/:id/confirmar', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
     try {
-      const { destino, destino_texto, monto, distancia_km, duracion_min } = request.body as any;
+      const { 
+        destino_lat, 
+        destino_lng, 
+        destino_texto, 
+        monto, 
+        distancia_km, 
+        duracion_min 
+      } = request.body as any;
+
       const viaje = await confirmarViajePasajeroUseCase.execute({
         viaje_id: request.params.id,
-        destino,
+        destino: { lat: destino_lat, lon: destino_lng }, // Maping de lat/lng a lat/lon
         destino_texto,
         monto,
         distancia_km,
