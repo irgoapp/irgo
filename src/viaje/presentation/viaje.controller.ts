@@ -15,6 +15,7 @@ import { ConsultarRutaMapaUseCase } from '../../mapa/application/use-cases/consu
 import { MapaApiClient } from '../../mapa/infrastructure/mapa-api.client';
 import { CalcularClientePrecioUseCase } from '../../precio/application/use-cases/calcular-cliente-precio.usecase';
 import { SupabasePrecioRepository } from '../../precio/infrastructure/supabase-precio.repository';
+import { emitTripUpdate } from '../../shared/socket.handler';
 
 // Repositorios e inyección cruzada por dependencias
 const viajeRepository = new SupabaseViajeRepository();
@@ -59,6 +60,10 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
     try {
       const dto = new AceptarViajeDto({ viaje_id: request.params.id, ...(request.body as any) });
       const viaje = await aceptarViajeUseCase.execute(dto);
+      
+      // Notificar al cliente vía WebSockets
+      emitTripUpdate(request.params.id, viaje);
+
       return reply.code(200).send(new ViajeResponseDto(viaje));
     } catch (error: any) {
       return reply.code(400).send({ error: error.message });
