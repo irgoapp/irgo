@@ -45,6 +45,13 @@ export function setupSocket(server: any) {
        }
     });
 
+    // --- CLIENTE WEB ---
+    // Unirse a una sala específica de viaje para recibir actualizaciones
+    socket.on('join_trip', (tripId: string) => {
+      socket.join(`trip_${tripId}`);
+      console.log(`[Sockets] 📱 Cliente unido a sala de viaje: ${tripId}`);
+    });
+
     socket.on('disconnect', () => {
       console.log(`[Sockets] 🔴 Desconexión: ${socket.id}`);
     });
@@ -64,4 +71,14 @@ export function emitirOfertaViaje(conductorId: string, oferta: any) {
     return true;
   }
   return false;
+}
+
+/**
+ * Notifica al cliente web que el viaje ha cambiado (ej. conductor aceptó)
+ */
+export function emitTripUpdate(tripId: string, data: any) {
+  if (ioInstance) {
+    ioInstance.to(`trip_${tripId}`).emit('trip_updated', data);
+    console.log(`[Sockets] 📢 Notificación de actualización enviada al viaje ${tripId}`);
+  }
 }
