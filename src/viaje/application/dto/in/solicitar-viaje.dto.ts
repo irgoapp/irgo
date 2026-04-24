@@ -1,13 +1,17 @@
 export class SolicitarViajeDto {
   cliente_id: string;
   origen: { lat: number; lon: number };
+  origen_texto?: string;
   destino: { lat: number; lon: number };
+  destino_texto?: string;
   tipo_vehiculo: string;
 
   constructor(data: any) {
     this.cliente_id = data.cliente_id;
     this.origen = { lat: data.origen_lat, lon: data.origen_lon };
+    this.origen_texto = data.origen_texto;
     this.destino = { lat: data.destino_lat, lon: data.destino_lon };
+    this.destino_texto = data.destino_texto;
     this.tipo_vehiculo = data.tipo_vehiculo;
   }
 

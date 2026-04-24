@@ -4,11 +4,14 @@ import { emitirOfertaViaje } from '../../../shared/socket.handler';
 import { OfertaViajeConductorDto } from '../dto/out/oferta-viaje-conductor.dto';
 import { ConfirmarViajeDto } from '../dto/in/confirmar-viaje.dto';
 import { ViajeResponseDto } from '../dto/out/viaje-response.dto';
+import { ConsultarRutaMapaUseCase } from '../../../mapa/application/use-cases/consultar-ruta-mapa.usecase';
+import { calcularDistanciaKm, calcularTiempoEstimadoMin } from '../../../shared/utils/geo.utils';
 
 export class ConfirmarViajePasajeroUseCase {
   constructor(
     private viajeRepository: IViajeRepository,
-    private conductorRepository: IConductorRepository
+    private conductorRepository: IConductorRepository,
+    private consultarRutaMapa: ConsultarRutaMapaUseCase
   ) {}
 
   async execute(dto: ConfirmarViajeDto): Promise<ViajeResponseDto> {
@@ -38,47 +41,66 @@ export class ConfirmarViajePasajeroUseCase {
   private async iniciarBusquedaPorRondas(viajeId: string) {
     console.log(`[MatchingEngine] Iniciando rondas para viaje: ${viajeId}`);
 
+    // Obtenemos el GeoJSON de la ruta una sola vez para todas las rondas
+    let geojson: any = null;
+    try {
+      const v = await this.viajeRepository.buscarPorId(viajeId);
+      if (v) {
+        const mapa = await this.consultarRutaMapa.execute({ origen: v.origen, destino: v.destino });
+        geojson = mapa.geojson;
+      }
+    } catch (e) {
+      console.error("[MatchingEngine] Error obteniendo GeoJSON para oferta:", e);
+    }
+
     // RONDA 1: Los 5 más cercanos
-    await this.ejecutarRonda(viajeId, 5, 0);
+    await this.ejecutarRonda(viajeId, 5, 0, geojson);
 
     // ESPERA 10 SEGUNDOS
     setTimeout(async () => {
       // RONDA 2: Los siguientes 10
-      await this.ejecutarRonda(viajeId, 10, 5);
+      await this.ejecutarRonda(viajeId, 10, 5, geojson);
     }, 10000);
   }
 
-  private async ejecutarRonda(viajeId: string, limite: number, offset: number) {
+  private async ejecutarRonda(viajeId: string, limite: number, offset: number, geojson: any) {
     const viaje = await this.viajeRepository.buscarPorId(viajeId);
     
-    // Si ya no está buscando (ej. alguien aceptó), cancelamos la ronda
     if (!viaje || viaje.estado !== 'buscando') {
       console.log(`[MatchingEngine] Viaje ${viajeId} ya no está buscando. Ronda cancelada.`);
       return;
     }
 
-    console.log(`[MatchingEngine] Ronda (L:${limite}, O:${offset}) para viaje ${viajeId}`);
-
     const conductores = await this.conductorRepository.buscarCercanosDisponibles(
       viaje.origen.lat,
       viaje.origen.lon,
-      3, // Radio 3km
+      5, // Radio 5km para mayor alcance
       viaje.tipo_vehiculo,
       limite,
       offset
     );
 
     for (const cond of conductores) {
-      if (!cond.id) continue;
+      if (!cond.id || !cond.ubicacion) continue;
       
+      // Cálculo de Distancia REAL Conductor -> Origen
+      const distConductorOrigen = calcularDistanciaKm(
+        cond.ubicacion.lat, cond.ubicacion.lon,
+        viaje.origen.lat, viaje.origen.lon
+      );
+
+      const tiempoConductorOrigen = calcularTiempoEstimadoMin(distConductorOrigen);
+
       const oferta = new OfertaViajeConductorDto(
         viaje,
-        0.5, // Distancia ficticia por ahora
-        2,   // Tiempo ficticio por ahora
-        Number((viaje.precio! * 0.85).toFixed(2)), // 15% Comisión IrGo
+        Number(distConductorOrigen.toFixed(2)),
+        tiempoConductorOrigen,
+        Number((viaje.precio! * 0.85).toFixed(2)), // 15% Comisión
         viaje.distancia_km || 0,
-        10 // Tiempo ruta ficticio
+        10 // Tiempo ruta base
       );
+
+      oferta.ruta = geojson;
 
       emitirOfertaViaje(cond.id, oferta);
     }

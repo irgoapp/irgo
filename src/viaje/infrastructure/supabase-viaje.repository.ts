@@ -40,6 +40,7 @@ export class SupabaseViajeRepository implements IViajeRepository {
       estado: data.estado,
       precio: data.monto_ruta,
       origen: { lat: data.origen_lat, lon: data.origen_lng },
+      origen_texto: data.origen_texto,
       destino: { lat: data.destino_lat || 0, lon: data.destino_lng || 0 },
       destino_texto: data.destino_texto,
       distancia_km: data.distancia_ruta,

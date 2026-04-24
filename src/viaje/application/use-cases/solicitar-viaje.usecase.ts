@@ -20,7 +20,9 @@ export class SolicitarViajeUseCase {
     const viaje = new Viaje({
       cliente_id: dto.cliente_id,
       origen: dto.origen,
+      origen_texto: dto.origen_texto,
       destino: dto.destino,
+      destino_texto: dto.destino_texto,
       tipo_vehiculo: dto.tipo_vehiculo,
       precio: 10.50 // TODO: Se inyectaría lógica del módulo 'precio'
     });

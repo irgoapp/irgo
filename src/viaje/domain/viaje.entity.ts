@@ -3,6 +3,7 @@ export class Viaje {
   cliente_id: string;
   conductor_id?: string;
   origen: { lat: number; lon: number };
+  origen_texto?: string;
   destino: { lat: number; lon: number };
   destino_texto?: string;
   tipo_vehiculo: string;
@@ -22,6 +23,7 @@ export class Viaje {
     this.cliente_id = data.cliente_id!;
     this.conductor_id = data.conductor_id;
     this.origen = data.origen!;
+    this.origen_texto = data.origen_texto;
     this.destino = data.destino!;
     this.destino_texto = data.destino_texto;
     this.tipo_vehiculo = data.tipo_vehiculo!;

@@ -56,11 +56,11 @@ export class OfertaViajeConductorDto {
     // Ubicaciones
     this.origen_lat = viaje.origen.lat;
     this.origen_lon = viaje.origen.lon;
-    this.origen_texto = 'Av. Principal (Por definir)'; 
+    this.origen_texto = viaje.origen_texto || 'Calle no identificada'; 
     
     this.destino_lat = viaje.destino.lat;
     this.destino_lon = viaje.destino.lon;
-    this.destino_texto = 'Destino Fijo (Por definir)';
+    this.destino_texto = viaje.destino_texto || 'Destino no identificado';
 
     // Cliente
     this.cliente_nombre_corto = 'Juan P.'; 
