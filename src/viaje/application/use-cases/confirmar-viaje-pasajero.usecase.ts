@@ -5,7 +5,6 @@ import { OfertaViajeConductorDto } from '../dto/out/oferta-viaje-conductor.dto';
 import { ConfirmarViajeDto } from '../dto/in/confirmar-viaje.dto';
 import { ViajeResponseDto } from '../dto/out/viaje-response.dto';
 import { ConsultarRutaMapaUseCase } from '../../../mapa/application/use-cases/consultar-ruta-mapa.usecase';
-import { calcularDistanciaKm, calcularTiempoEstimadoMin } from '../../../shared/utils/geo.utils';
 
 export class ConfirmarViajePasajeroUseCase {
   constructor(
@@ -81,20 +80,10 @@ export class ConfirmarViajePasajeroUseCase {
     );
 
     for (const cond of conductores) {
-      if (!cond.id || !cond.ubicacion) continue;
+      if (!cond.id) continue;
       
-      // Cálculo de Distancia REAL Conductor -> Origen
-      const distConductorOrigen = calcularDistanciaKm(
-        cond.ubicacion.lat, cond.ubicacion.lon,
-        viaje.origen.lat, viaje.origen.lon
-      );
-
-      const tiempoConductorOrigen = calcularTiempoEstimadoMin(distConductorOrigen);
-
       const oferta = new OfertaViajeConductorDto(
         viaje,
-        Number(distConductorOrigen.toFixed(2)),
-        tiempoConductorOrigen,
         Number((viaje.precio! * 0.85).toFixed(2)), // 15% Comisión
         viaje.distancia_km || 0,
         10 // Tiempo ruta base

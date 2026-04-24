@@ -13,8 +13,6 @@ export class OfertaViajeConductorDto {
   monto: number;
 
   // Datos Logísticos
-  distancia_conductor_a_origen: number;
-  tiempo_conductor_a_origen: number;
   distancia_ruta: number;
   tiempo_ruta: number;
 
@@ -35,8 +33,6 @@ export class OfertaViajeConductorDto {
 
   constructor(
     viaje: Viaje,
-    distanciaConductorAlPasajero: number,
-    tiempoConductorAlPasajero: number,
     gananciaPura: number,
     distanciaRutaOrigenADestino: number,
     tiempoRutaOrigenADestino: number
@@ -48,8 +44,6 @@ export class OfertaViajeConductorDto {
     this.monto = gananciaPura;
 
     // Distancias y Tiempos
-    this.distancia_conductor_a_origen = distanciaConductorAlPasajero;
-    this.tiempo_conductor_a_origen = tiempoConductorAlPasajero;
     this.distancia_ruta = distanciaRutaOrigenADestino; 
     this.tiempo_ruta = tiempoRutaOrigenADestino;
     
