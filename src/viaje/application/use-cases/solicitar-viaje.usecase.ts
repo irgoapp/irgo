@@ -40,8 +40,6 @@ export class SolicitarViajeUseCase {
       
       const ofertaDto = new OfertaViajeConductorDto(
         viajeGuardado,
-        0.5, // Dummy temporal: KM hacia el cliente
-        2,   // Dummy temporal: MIN hacia el cliente
         7.50, // Dummy temporal: Su ganancia limpia calculada
         0,    // Dummy temporal: Distancia de la ruta
         0     // Dummy temporal: Tiempo de la ruta

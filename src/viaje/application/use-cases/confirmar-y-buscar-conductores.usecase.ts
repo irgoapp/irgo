@@ -54,8 +54,6 @@ export class ConfirmarYBuscarConductoresUseCase {
       
       const ofertaDto = new OfertaViajeConductorDto(
         viaje,
-        0.5, // Dummy Distance Origen->Conductor (se puede cambiar luego a real)
-        2,   // Dummy Time Origen->Conductor
         Number((recaudoFinal * 0.85).toFixed(2)), // 15% Comisión IrGo
         mapa.distancia_km, // Agregado dinámico real extraído de ruta-proxy
         mapa.tiempo_minutos || 10 // Tiempo extraído del motor Mapas
