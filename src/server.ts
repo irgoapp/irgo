@@ -1,3 +1,4 @@
+// v1.0.1 - Estabilidad y Conectividad Maps-API
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { setupSocket } from './shared/socket.handler';
