@@ -26,6 +26,7 @@ export class ConfirmarViajeClienteUseCase {
     viaje.destino_texto = dto.destino_texto;
     viaje.precio = dto.monto;
     viaje.distancia_km = dto.distancia_km;
+    viaje.tiempo_min = dto.duracion_min;
     viaje.estado = 'buscando';
     viaje.buscando_at = new Date();
 
@@ -89,7 +90,7 @@ export class ConfirmarViajeClienteUseCase {
         viaje,
         Number((viaje.precio! * 0.85).toFixed(2)), // 15% Comisión
         viaje.distancia_km || 0,
-        10 // Tiempo ruta base
+        viaje.tiempo_min || 0
       );
 
       oferta.ruta = geojson;
