@@ -4,6 +4,7 @@ import { ConductorResponseDto } from '../application/dto/out/conductor-response.
 import { ActualizarUbicacionConductorUseCase } from '../application/use-cases/actualizar-ubicacion-conductor.usecase';
 import { ConsultarHistorialConductorUseCase } from '../application/use-cases/consultar-historial-conductor.usecase';
 import { ObtenerUbicacionConductorUseCase } from '../application/use-cases/obtener-ubicacion-conductor.usecase';
+import { CambiarDisponibilidadConductorUseCase } from '../application/use-cases/cambiar-disponibilidad-conductor.usecase';
 import { SupabaseConductorRepository } from '../infrastructure/supabase-conductor.repository';
 import { SupabaseViajeRepository } from '../../viaje/infrastructure/supabase-viaje.repository';
 
@@ -13,6 +14,7 @@ const viajeRepository = new SupabaseViajeRepository();
 const actualizarUbicacionUseCase = new ActualizarUbicacionConductorUseCase(repository);
 const consultarHistorialUseCase = new ConsultarHistorialConductorUseCase(viajeRepository);
 const obtenerUbicacionUseCase = new ObtenerUbicacionConductorUseCase(repository);
+const cambiarDisponibilidadUseCase = new CambiarDisponibilidadConductorUseCase(repository);
 
 export async function conductorControllerPlugin(fastify: FastifyInstance, options: FastifyPluginOptions) {
   fastify.put('/:id/ubicacion', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
@@ -45,5 +47,21 @@ export async function conductorControllerPlugin(fastify: FastifyInstance, option
     }
   });
 
-  // Aquí irían otros endpoints del dominio conductor (ej. disponibilidad)
+  fastify.put('/:id/disponibilidad', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+    try {
+      const body = request.body as any;
+      const disponible = body.disponible === true || 
+                        body.disponible === 'true' || 
+                        body.disponible === 1;
+
+      await cambiarDisponibilidadUseCase.execute({ 
+        conductor_id: request.params.id, 
+        disponible 
+      });
+
+      return reply.code(200).send({ ok: true, disponible });
+    } catch (error: any) {
+      return reply.code(400).send({ error: error.message });
+    }
+  });
 }
