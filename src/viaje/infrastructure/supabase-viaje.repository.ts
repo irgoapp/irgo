@@ -5,23 +5,15 @@ import { supabaseClient } from '../../shared/supabase.client';
 export class SupabaseViajeRepository implements IViajeRepository {
   
   async crear(viaje: Viaje): Promise<Viaje> {
+    const payload = this.mapToDatabase(viaje);
     const { data, error } = await supabaseClient
       .from('solicitudes')
-      .insert({
-        cliente_id: viaje.cliente_id,
-        origen: `POINT(${viaje.origen.lon} ${viaje.origen.lat})`,
-        origen_lat: viaje.origen.lat,
-        origen_lng: viaje.origen.lon,
-        destino_lat: viaje.destino.lat, 
-        destino_lng: viaje.destino.lon,
-        monto_ruta: viaje.precio ?? 0,
-        estado: 'borrador' 
-      })
+      .insert(payload)
       .select()
       .single();
 
     if (error) throw new Error(error.message);
-    return new Viaje({ ...viaje, id: data.id, estado: data.estado });
+    return this.mapToEntity(data);
   }
 
   async buscarPorId(id: string): Promise<Viaje | null> {
@@ -33,26 +25,7 @@ export class SupabaseViajeRepository implements IViajeRepository {
 
     if (error || !data) return null;
     
-    return new Viaje({
-      id: data.id,
-      cliente_id: data.cliente_id,
-      conductor_id: data.conductor_id,
-      estado: data.estado,
-      precio: data.monto_ruta,
-      origen: { lat: data.origen_lat, lon: data.origen_lng },
-      origen_texto: data.origen_texto,
-      destino: { lat: data.destino_lat || 0, lon: data.destino_lng || 0 },
-      destino_texto: data.destino_texto,
-      distancia_km: data.distancia_ruta,
-      tipo_vehiculo: 'basico',
-      creado_en: new Date(data.created_at),
-      buscando_at: data.buscando_at,
-      asignado_at: data.asignado_at,
-      llegado_at: data.llegado_at,
-      iniciado_at: data.iniciado_at,
-      completado_at: data.completado_at,
-      cancelado_at: data.cancelado_at
-    });
+    return this.mapToEntity(data);
   }
 
   async actualizarEstado(id: string, estado: string): Promise<boolean> {
@@ -76,28 +49,66 @@ export class SupabaseViajeRepository implements IViajeRepository {
   }
 
   async actualizar(viaje: Viaje): Promise<Viaje> {
+    const payload = this.mapToDatabase(viaje);
     const { data, error } = await supabaseClient
       .from('solicitudes')
-      .update({
-        destino_lat: viaje.destino.lat,
-        destino_lng: viaje.destino.lon,
-        destino_texto: viaje.destino_texto,
-        monto_ruta: viaje.precio,
-        estado: viaje.estado,
-        distancia_ruta: viaje.distancia_km,
-        buscando_at: viaje.buscando_at?.toISOString(),
-        asignado_at: viaje.asignado_at?.toISOString(),
-        llegado_at: viaje.llegado_at?.toISOString(),
-        iniciado_at: viaje.iniciado_at?.toISOString(),
-        completado_at: viaje.completado_at?.toISOString(),
-        cancelado_at: viaje.cancelado_at?.toISOString()
-      })
+      .update(payload)
       .eq('id', viaje.id)
       .select()
       .single();
 
     if (error) throw new Error(error.message);
-    return this.buscarPorId(data.id) as any;
+    return this.mapToEntity(data);
+  }
+
+  // --- Mapeadores ---
+
+  private mapToDatabase(v: Viaje): any {
+    return {
+      cliente_id: v.cliente_id,
+      conductor_id: v.conductor_id,
+      origen_lat: v.origen.lat,
+      origen_lng: v.origen.lon,
+      origen_texto: v.origen_texto,
+      destino_lat: v.destino?.lat,
+      destino_lng: v.destino?.lon,
+      destino_texto: v.destino_texto,
+      monto_ruta: v.precio,
+      distancia_ruta: v.distancia_km,
+      tiempo_ruta: v.tiempo_min,
+      tipo_vehiculo: v.tipo_vehiculo,
+      estado: v.estado,
+      buscando_at: v.buscando_at?.toISOString(),
+      asignado_at: v.asignado_at?.toISOString(),
+      llegado_at: v.llegado_at?.toISOString(),
+      iniciado_at: v.iniciado_at?.toISOString(),
+      completado_at: v.completado_at?.toISOString(),
+      cancelado_at: v.cancelado_at?.toISOString()
+    };
+  }
+
+  private mapToEntity(data: any): Viaje {
+    return new Viaje({
+      id: data.id,
+      cliente_id: data.cliente_id,
+      conductor_id: data.conductor_id,
+      estado: data.estado,
+      precio: data.monto_ruta,
+      origen: { lat: data.origen_lat, lon: data.origen_lng },
+      origen_texto: data.origen_texto,
+      destino: { lat: data.destino_lat || 0, lon: data.destino_lng || 0 },
+      destino_texto: data.destino_texto,
+      distancia_km: data.distancia_ruta,
+      tiempo_min: data.tiempo_ruta,
+      tipo_vehiculo: data.tipo_vehiculo || 'basico',
+      creado_en: new Date(data.created_at),
+      buscando_at: data.buscando_at,
+      asignado_at: data.asignado_at,
+      llegado_at: data.llegado_at,
+      iniciado_at: data.iniciado_at,
+      completado_at: data.completado_at,
+      cancelado_at: data.cancelado_at
+    });
   }
 
   async actualizarConductor(id: string, conductorId: string): Promise<boolean> {

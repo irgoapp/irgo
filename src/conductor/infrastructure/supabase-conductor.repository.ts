@@ -49,8 +49,8 @@ export class SupabaseConductorRepository implements IConductorRepository {
     const { data: drivers, error } = await supabaseClient
       .from('conductores')
       .select('id, ubicacion, disponible, vehiculo_tipo')
-      .eq('disponible', true)
-      .eq('vehiculo_tipo', tipoVehiculo);
+      .eq('disponible', true);
+      // .eq('vehiculo_tipo', tipoVehiculo); // Filtro desactivado temporalmente
 
     if (error) throw new Error(error.message);
     

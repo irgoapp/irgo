@@ -9,6 +9,7 @@ export class Viaje {
   tipo_vehiculo: string;
   precio?: number;
   distancia_km?: number;
+  tiempo_min?: number;
   estado: string;
   creado_en: Date;
   buscando_at?: Date;
@@ -29,6 +30,7 @@ export class Viaje {
     this.tipo_vehiculo = data.tipo_vehiculo!;
     this.precio = data.precio;
     this.distancia_km = data.distancia_km;
+    this.tiempo_min = data.tiempo_min;
     this.estado = data.estado || 'solicitado';
     this.creado_en = data.creado_en || new Date();
     this.buscando_at = data.buscando_at ? new Date(data.buscando_at) : undefined;
