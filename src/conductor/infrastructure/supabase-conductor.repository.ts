@@ -5,19 +5,24 @@ import { supabaseClient } from '../../shared/supabase.client';
 export class SupabaseConductorRepository implements IConductorRepository {
   
   async buscarPorId(id: string): Promise<Conductor | null> {
-    const { data, error } = await supabaseClient
-      .from('conductores')
-      .select('id, disponible, vehiculo_tipo, lat, lon')
-      .eq('id', id)
-      .single();
+    // Usamos RPC para evitar el conflicto con la columna 'ubicacion' EWKB
+    const { data, error } = await supabaseClient.rpc('obtener_conductor_por_id', { 
+      id_conductor: id 
+    });
 
-    if (error || !data) return null;
+    if (error || !data) {
+      console.warn(`[Repository] Conductor ${id} no encontrado o error en RPC:`, error);
+      return null;
+    }
+
+    // La RPC ya nos devuelve lat y lon como números planos
+    const d = Array.isArray(data) ? data[0] : data;
     
     return new Conductor({
-      id: data.id,
-      disponible: data.disponible,
-      tipo_vehiculo: data.vehiculo_tipo,
-      ubicacion_actual: { lat: data.lat, lon: data.lon }
+      id: d.id,
+      disponible: d.disponible,
+      tipo_vehiculo: d.vehiculo_tipo,
+      ubicacion_actual: { lat: d.lat, lon: d.lon }
     });
   }
 
