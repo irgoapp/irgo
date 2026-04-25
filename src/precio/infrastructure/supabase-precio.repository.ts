@@ -11,7 +11,16 @@ export class SupabasePrecioRepository implements IPrecioRepository {
       .single();
 
     if (error || !data) {
-      throw new Error(`No se encontró configuración de tarifas para el tipo: ${tipoVehiculo}`);
+      console.warn(`[Repository] Tarifa '${tipoVehiculo}' no encontrada. Usando valores por defecto.`);
+      // Valores por defecto seguros para evitar caída del sistema
+      return new Precio({
+        tipo_vehiculo: tipoVehiculo,
+        precio_por_km: 3, 
+        tarifa_minima_bs: 10,
+        comision_por_solicitud: 0.5,
+        comision_por_km: 0.3,
+        comision_solicitud_minima: 1
+      });
     }
 
     return new Precio(data);
