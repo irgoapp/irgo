@@ -89,10 +89,17 @@ export function setupSocket(server: any) {
  */
 export function emitirOfertaViaje(conductorId: string, oferta: any) {
   if (ioInstance) {
-    ioInstance.to(`conductor_${conductorId}`).emit('oferta_viaje', oferta);
+    const sala = `conductor_${conductorId}`;
+    const socketsEnSala = ioInstance.sockets.adapter.rooms.get(sala);
+    
+    console.log(`[Socket] Intentando emitir a sala: ${sala}`);
+    console.log(`[Socket] Sockets en esa sala: ${socketsEnSala?.size ?? 0}`);
+    
+    ioInstance.to(sala).emit('oferta_viaje', oferta);
     console.log(`[Sockets] 📨 OFERTA_VIAJE enviada al conductor ${conductorId}`);
     return true;
   }
+  console.log(`[Socket] ioInstance no existe`);
   return false;
 }
 
