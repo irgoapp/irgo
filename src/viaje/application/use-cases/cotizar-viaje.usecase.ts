@@ -28,7 +28,7 @@ export class CotizarViajeUseCase {
     return {
       monto: precio,
       distancia_km: mapa.distancia_km,
-      tiempo_min: mapa.tiempo_minutos, // Restaurado nombre original para App Cliente
+      tiempo_minutos: mapa.tiempo_minutos,
       ruta: mapa.geojson // El gusano de puntos GPS para dibujar en la Web/App
     };
   }
