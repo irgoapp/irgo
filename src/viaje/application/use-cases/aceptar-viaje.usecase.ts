@@ -45,8 +45,8 @@ export class AceptarViajeUseCase {
     viaje.conductor_id = dto.conductor_id;
     viaje.asignado_at = new Date();
 
-    // Actualizamos el viaje con el nuevo conductor y la ruta de recogida calculada
-    await this.viajeRepository.actualizar(viaje);
+    // Actualizamos el viaje con el nuevo conductor y la ruta de recogida calculada (Usando bloqueo atómico)
+    await this.viajeRepository.asignarConductor(viaje.id!, dto.conductor_id, viaje.ruta_recogida);
 
     return viaje;
   }

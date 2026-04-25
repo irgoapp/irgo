@@ -116,13 +116,14 @@ export class SupabaseViajeRepository implements IViajeRepository {
     });
   }
 
-  async actualizarConductor(id: string, conductorId: string): Promise<boolean> {
+  async asignarConductor(id: string, conductorId: string, rutaRecogida?: any[]): Promise<boolean> {
     const { data, error } = await supabaseClient
       .from('solicitudes')
       .update({
         conductor_id: conductorId,
         asignado_at: new Date().toISOString(),
-        estado: 'asignado'
+        estado: 'asignado',
+        ruta_recogida: rutaRecogida
       })
       .eq('id', id)
       .eq('estado', 'buscando') // Bloqueo Atómico
