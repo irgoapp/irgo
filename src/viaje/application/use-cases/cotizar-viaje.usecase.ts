@@ -21,7 +21,7 @@ export class CotizarViajeUseCase {
     // 2. Calcular el precio oficial de la plataforma
     const precio = await this.calcularPrecio.execute({
       distancia_km: mapa.distancia_km,
-      tipo_vehiculo: dto.tipo_vehiculo || 'basico'
+      tipo_vehiculo: dto.tipo_vehiculo || 'moto'
     });
 
     // 3. Empacar todo para el cliente (mismo formato que antes pero centralizado)
