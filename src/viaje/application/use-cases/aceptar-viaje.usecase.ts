@@ -24,8 +24,12 @@ export class AceptarViajeUseCase {
 
     // 1. Obtener ubicación del conductor que aceptó
     const conductor = await this.conductorRepository.buscarPorId(dto.conductor_id);
+    console.log(`[AceptarViaje] Conductor ${dto.conductor_id} encontrado. Ubicación:`, conductor?.ubicacion_actual);
+
     if (conductor && conductor.ubicacion_actual) {
       try {
+        console.log(`[AceptarViaje] Calculando ruta_recogida desde (${conductor.ubicacion_actual.lat}, ${conductor.ubicacion_actual.lon}) hasta origen cliente`);
+        
         // 2. Calcular Ruta Recogida (Conductor -> Origen)
         const mapaRecogida = await this.consultarRutaMapa.execute({
           origen: conductor.ubicacion_actual,
@@ -35,10 +39,15 @@ export class AceptarViajeUseCase {
         // 3. Aplanar GeoJSON
         if (mapaRecogida.geojson?.features) {
           viaje.ruta_recogida = mapaRecogida.geojson.features.flatMap((f: any) => f.geometry.coordinates);
+          console.log(`[AceptarViaje] ✅ ruta_recogida calculada y aplanada: ${viaje.ruta_recogida?.length || 0} puntos`);
+        } else {
+          console.warn(`[AceptarViaje] ⚠️ Maps-API devolvió ruta pero sin coordenadas válidas.`);
         }
       } catch (e) {
-        console.error(`[AceptarViaje] Error calculando ruta recogida:`, e);
+        console.error(`[AceptarViaje] ❌ Error calculando ruta recogida:`, e);
       }
+    } else {
+      console.warn(`[AceptarViaje] ⚠️ No se pudo calcular ruta_recogida: El conductor no tiene GPS activo.`);
     }
 
     viaje.estado = 'asignado';
@@ -46,7 +55,7 @@ export class AceptarViajeUseCase {
     viaje.asignado_at = new Date();
 
     // Actualizamos el viaje con el nuevo conductor y la ruta de recogida calculada (Usando bloqueo atómico)
-    await this.viajeRepository.asignarConductor(viaje.id!, dto.conductor_id, viaje.ruta_recogida);
+    await this.viajeRepository.asignarConductor(viaje.id!, dto.conductor_id, viaje.ruta_recogida || []);
 
     return viaje;
   }

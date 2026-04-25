@@ -10,6 +10,7 @@ import { ConfirmarViajeClienteUseCase } from '../application/use-cases/confirmar
 import { CancelarViajeUseCase } from '../application/use-cases/cancelar-viaje.usecase';
 import { ObtenerViajeUseCase } from '../application/use-cases/obtener-viaje.usecase';
 import { CalificarViajeUseCase } from '../application/use-cases/calificar-viaje.usecase';
+import { MarcarLlegadaUseCase } from '../application/use-cases/marcar-llegada.usecase';
 import { SupabaseViajeRepository } from '../infrastructure/supabase-viaje.repository';
 import { SupabaseConductorRepository } from '../../conductor/infrastructure/supabase-conductor.repository';
 import { ConsultarRutaMapaUseCase } from '../../mapa/application/use-cases/consultar-ruta-mapa.usecase';
@@ -35,6 +36,7 @@ const confirmarViajeClienteUseCase = new ConfirmarViajeClienteUseCase(viajeRepos
 const cancelarViajeUseCase = new CancelarViajeUseCase(viajeRepository);
 const obtenerViajeUseCase = new ObtenerViajeUseCase(viajeRepository);
 const calificarViajeUseCase = new CalificarViajeUseCase(viajeRepository);
+const marcarLlegadaUseCase = new MarcarLlegadaUseCase(viajeRepository);
 
 export async function viajeControllerPlugin(fastify: FastifyInstance, options: FastifyPluginOptions) {
   
@@ -141,6 +143,21 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
       });
       return reply.code(200).send({ ok: exito });
     } catch (error: any) {
+      return reply.code(400).send({ error: error.message });
+    }
+  });
+
+  fastify.post('/:id/llegue', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+    try {
+      console.log(`[ViajeController] 🚕 Conductor reporta llegada para viaje: ${request.params.id}`);
+      const viaje = await marcarLlegadaUseCase.execute(request.params.id);
+      
+      // Notificar al cliente vía WebSockets
+      emitTripUpdate(request.params.id, viaje);
+
+      return reply.code(200).send(new ViajeResponseDto(viaje));
+    } catch (error: any) {
+      console.error(`[ViajeController] ❌ Error marcando llegada para viaje ${request.params.id}:`, error.message);
       return reply.code(400).send({ error: error.message });
     }
   });
