@@ -5,7 +5,7 @@ export class ConfirmarViajeDto {
   destino_texto: string;
   monto: number;
   distancia_km: number;
-  tiempo_minutos: number;
+  duracion_min: number;
 
   constructor(data: any) {
     this.viaje_id = data.viaje_id;
@@ -14,7 +14,7 @@ export class ConfirmarViajeDto {
     this.destino_texto = data.destino_texto;
     this.monto = data.monto;
     this.distancia_km = data.distancia_km;
-    this.tiempo_minutos = data.tiempo_minutos;
+    this.duracion_min = data.duracion_min;
   }
 
   validar() {

@@ -7,13 +7,13 @@ import { Viaje } from '../../../domain/viaje.entity';
  */
 export class OfertaViajeConductorDto {
   viaje_id: string;
-  
+
   // Datos Financieros 
   monto: number;
 
   // Datos Logísticos
   distancia_ruta: number;
-  tiempo_minutos: number;
+  tiempo_ruta: number;
 
   // Ubicaciones puras 
   origen_lat: number;
@@ -22,7 +22,7 @@ export class OfertaViajeConductorDto {
   destino_lat: number;
   destino_lon: number;
   destino_texto: string;
-  
+
   // Dibujo Polyline Cartográfica
   ruta?: any[];
 
@@ -37,25 +37,25 @@ export class OfertaViajeConductorDto {
     tiempoRutaOrigenADestino: number
   ) {
     this.viaje_id = viaje.id!;
-    
+
     // Financiero
     this.monto = gananciaPura;
 
     // Distancias y Tiempos
-    this.distancia_ruta = distanciaRutaOrigenADestino; 
-    this.tiempo_minutos = tiempoRutaOrigenADestino;
-    
+    this.distancia_ruta = distanciaRutaOrigenADestino;
+    this.tiempo_ruta = tiempoRutaOrigenADestino;
+
     // Ubicaciones
     this.origen_lat = viaje.origen.lat;
     this.origen_lon = viaje.origen.lon;
-    this.origen_texto = viaje.origen_texto || 'Calle no identificada'; 
-    
+    this.origen_texto = viaje.origen_texto || 'Calle no identificada';
+
     this.destino_lat = viaje.destino.lat;
     this.destino_lon = viaje.destino.lon;
     this.destino_texto = viaje.destino_texto || 'Destino no identificado';
 
     // Cliente
-    this.cliente_nombre_corto = 'Juan P.'; 
+    this.cliente_nombre_corto = 'Juan P.';
     this.cliente_calificacion = 4.8;
   }
 }

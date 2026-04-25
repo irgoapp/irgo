@@ -13,11 +13,11 @@ export class ConfirmarViajeClienteUseCase {
     private conductorRepository: IConductorRepository,
     private consultarRutaMapa: ConsultarRutaMapaUseCase,
     private calcularComisionUseCase: CalcularComisionUseCase
-  ) {}
+  ) { }
 
   async execute(dto: ConfirmarViajeDto): Promise<ViajeResponseDto> {
     dto.validar();
-    
+
     // 1. Buscamos el viaje borrador
     const viaje = await this.viajeRepository.buscarPorId(dto.viaje_id);
     if (!viaje) throw new Error('Viaje no encontrado');
@@ -28,12 +28,12 @@ export class ConfirmarViajeClienteUseCase {
     viaje.destino_texto = dto.destino_texto;
     viaje.precio = dto.monto;
     viaje.distancia_km = dto.distancia_km;
-    viaje.tiempo_minutos = dto.tiempo_minutos;
+    viaje.tiempo_min = dto.duracion_min;
     viaje.estado = 'buscando';
     viaje.buscando_at = new Date();
 
     const actualizado = await this.viajeRepository.actualizar(viaje);
-    
+
     // 3. DISPARAR MOTOR DE EMPAREJAMIENTO (Matching Engine) EN SEGUNDO PLANO
     this.iniciarBusquedaPorRondas(actualizado.id!);
 
@@ -51,14 +51,14 @@ export class ConfirmarViajeClienteUseCase {
         // RUTA PRINCIPAL: Origen -> Destino del cliente
         const mapa = await this.consultarRutaMapa.execute({ origen: v.origen, destino: v.destino });
         tiempoEstimado = mapa.tiempo_minutos || 10;
-        
+
         // Aplanar el GeoJSON antes de guardar (Requerimiento IrGo_Backend)
         if (mapa.geojson?.features) {
           rutaCoords = mapa.geojson.features.flatMap((f: any) => f.geometry.coordinates);
-          
+
           // PERSISTENCIA: Guardamos la ruta del viaje (origen -> destino)
           v.ruta = rutaCoords;
-          v.tiempo_minutos = tiempoEstimado;
+          v.tiempo_min = tiempoEstimado;
           await this.viajeRepository.actualizar(v);
         }
       }
@@ -79,7 +79,7 @@ export class ConfirmarViajeClienteUseCase {
   private async ejecutarRonda(viajeId: string, limite: number, offset: number, ruta: any[], tiempoEstimado: number) {
     console.log(`[MatchingEngine] Ejecutando Ronda (L:${limite}, O:${offset}) para viaje ${viajeId}`);
     const viaje = await this.viajeRepository.buscarPorId(viajeId);
-    
+
     if (!viaje || viaje.estado !== 'buscando') {
       console.log(`[MatchingEngine] Viaje ${viajeId} ya no está buscando. Ronda cancelada.`);
       return;
@@ -93,12 +93,12 @@ export class ConfirmarViajeClienteUseCase {
       limite,
       offset
     );
-    
+
     console.log(`[MatchingEngine] Conductores encontrados para tipo ${viaje.tipo_vehiculo}: ${conductores.length}`);
 
     for (const cond of conductores) {
       if (!cond.id || !cond.ubicacion_actual) continue;
-      
+
       const precioCliente = viaje.precio!;
       const comision = await this.calcularComisionUseCase.execute({
         distancia_km: viaje.distancia_km || 0,

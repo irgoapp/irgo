@@ -3,7 +3,7 @@ import { Viaje } from '../domain/viaje.entity';
 import { supabaseClient } from '../../shared/supabase.client';
 
 export class SupabaseViajeRepository implements IViajeRepository {
-  
+
   async crear(viaje: Viaje): Promise<Viaje> {
     const payload = this.mapToDatabase(viaje);
     const { data, error } = await supabaseClient
@@ -24,14 +24,14 @@ export class SupabaseViajeRepository implements IViajeRepository {
       .single();
 
     if (error || !data) return null;
-    
+
     return this.mapToEntity(data);
   }
 
   async actualizarEstado(id: string, estado: string): Promise<boolean> {
     const updatePayload: any = { estado };
     const now = new Date().toISOString();
-    
+
     if (estado === 'buscando') updatePayload.buscando_at = now;
     if (estado === 'asignado') updatePayload.asignado_at = now;
     if (estado === 'llegado') updatePayload.llegado_at = now;
@@ -76,7 +76,7 @@ export class SupabaseViajeRepository implements IViajeRepository {
       destino_texto: v.destino_texto,
       monto_ruta: v.precio,
       distancia_ruta: v.distancia_km,
-      tiempo_ruta: v.tiempo_minutos,
+      tiempo_ruta: v.tiempo_min,
       tipo_vehiculo: v.tipo_vehiculo,
       estado: v.estado,
       buscando_at: v.buscando_at?.toISOString(),
@@ -102,7 +102,7 @@ export class SupabaseViajeRepository implements IViajeRepository {
       destino: { lat: data.destino_lat || 0, lon: data.destino_lng || 0 },
       destino_texto: data.destino_texto,
       distancia_km: data.distancia_ruta,
-      tiempo_minutos: data.tiempo_ruta,
+      tiempo_min: data.tiempo_ruta,
       tipo_vehiculo: data.tipo_vehiculo || 'basico',
       creado_en: new Date(data.created_at),
       buscando_at: data.buscando_at,
