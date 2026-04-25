@@ -1,4 +1,4 @@
-import { IConductorRepository } from '../domain/conductor.repository'; // Fresh build trigger
+import { IConductorRepository } from '../domain/conductor.repository'; // RPC Compatibility v1.2.1
 import { Conductor } from '../domain/conductor.entity';
 import { supabaseClient } from '../../shared/supabase.client';
 
