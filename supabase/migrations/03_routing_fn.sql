@@ -10,7 +10,9 @@ CREATE OR REPLACE FUNCTION calculate_route(
 ) 
 RETURNS TABLE (
     seq INTEGER, 
+    node BIGINT,
     edge BIGINT, 
+    source BIGINT,
     cost FLOAT8,       
     distance_m FLOAT8, 
     geom GEOMETRY
@@ -31,13 +33,10 @@ BEGIN
     end_pt := ST_SetSRID(ST_Point(end_lng, end_lat), 4326);
 
     -- SNAPPING ROBUSTO (Mejora para Avenidas)
-    -- En lugar de buscar el nodo más cercano (que puede estar en otro carril),
-    -- buscamos la calle más cercana y tomamos su nodo.
-    
     SELECT CASE WHEN ST_Distance(start_pt, ST_StartPoint(s.geom)) < ST_Distance(start_pt, ST_EndPoint(s.geom)) 
            THEN s.source ELSE s.target END INTO start_node
     FROM streets s 
-    WHERE ST_DWithin(s.geom, start_pt, 0.001) -- ~100 metros aprox
+    WHERE ST_DWithin(s.geom, start_pt, 0.001) 
     ORDER BY s.geom <-> start_pt LIMIT 1;
 
     SELECT CASE WHEN ST_Distance(end_pt, ST_StartPoint(s.geom)) < ST_Distance(end_pt, ST_EndPoint(s.geom)) 
@@ -46,7 +45,6 @@ BEGIN
     WHERE ST_DWithin(s.geom, end_pt, 0.001) 
     ORDER BY s.geom <-> end_pt LIMIT 1;
 
-    -- Fallback si no hay calles cerca (usar nodo tradicional como último recurso)
     IF start_node IS NULL THEN
         SELECT n.id INTO start_node FROM nodes n ORDER BY n.geom <-> start_pt LIMIT 1;
     END IF;
@@ -54,9 +52,8 @@ BEGIN
         SELECT n.id INTO end_node FROM nodes n ORDER BY n.geom <-> end_pt LIMIT 1;
     END IF;
 
-    -- Ejecución de Dijkstra directo con pesos calibrados por OSM
     RETURN QUERY EXECUTE format(
-        'SELECT d.seq, d.edge, d.cost AS cost, s.cost AS distance_m, s.geom ' ||
+        'SELECT d.seq, d.node, d.edge, s.source, d.cost AS cost, s.cost AS distance_m, s.geom ' ||
         'FROM pgr_dijkstra(' ||
         '  ''SELECT id, source, target, %I AS cost, ' ||
         '     CASE WHEN %I < 0 THEN -1 ELSE %I END AS reverse_cost ' ||
