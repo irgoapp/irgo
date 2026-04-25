@@ -34,13 +34,24 @@ const start = async () => {
   try {
     const PORT = parseInt(process.env.PORT || '3005', 10);
     
-    // Primero Fastify escucha
+    // Primero Fastify escucha en todas las interfaces para Railway
     await fastify.listen({ port: PORT, host: '0.0.0.0' });
     
     // DESPUÉS montamos Socket.io sobre el servidor ya activo
     setupSocket(fastify.server);
     
     console.log(`🚀 IRGO Backend Vertical listo en puerto ${PORT}`);
+
+    // Manejo de señales de apagado (Graceful Shutdown)
+    const shutdown = async () => {
+      console.log('🛑 Recibida señal de apagado. Cerrando servidor...');
+      await fastify.close();
+      process.exit(0);
+    };
+
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
+
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
