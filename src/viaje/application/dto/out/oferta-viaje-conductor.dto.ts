@@ -13,7 +13,7 @@ export class OfertaViajeConductorDto {
 
   // Datos Logísticos
   distancia_ruta: number;
-  tiempo_ruta: number;
+  tiempo_minutos: number;
 
   // Ubicaciones puras 
   origen_lat: number;
@@ -43,7 +43,7 @@ export class OfertaViajeConductorDto {
 
     // Distancias y Tiempos
     this.distancia_ruta = distanciaRutaOrigenADestino; 
-    this.tiempo_ruta = tiempoRutaOrigenADestino;
+    this.tiempo_minutos = tiempoRutaOrigenADestino;
     
     // Ubicaciones
     this.origen_lat = viaje.origen.lat;

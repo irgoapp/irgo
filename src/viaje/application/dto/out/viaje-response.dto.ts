@@ -20,6 +20,7 @@ export class ViajeResponseDto {
   cancelado_at?: string;
   ruta?: any[];
   ruta_recogida?: any[];
+  tiempo_minutos: number;
 
   constructor(viaje: Viaje) {
     this.id = viaje.id || '';
@@ -40,6 +41,7 @@ export class ViajeResponseDto {
     this.cancelado_at = viaje.cancelado_at?.toISOString();
     this.ruta = viaje.ruta;
     this.ruta_recogida = viaje.ruta_recogida;
+    this.tiempo_minutos = viaje.tiempo_minutos || 0;
     
     // Si hay conductor, preparamos el objeto anidado que busca el frontend
     if (viaje.conductor_id) {

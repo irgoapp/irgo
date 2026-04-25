@@ -28,7 +28,7 @@ export class ConfirmarViajeClienteUseCase {
     viaje.destino_texto = dto.destino_texto;
     viaje.precio = dto.monto;
     viaje.distancia_km = dto.distancia_km;
-    viaje.tiempo_min = dto.duracion_min;
+    viaje.tiempo_minutos = dto.tiempo_minutos;
     viaje.estado = 'buscando';
     viaje.buscando_at = new Date();
 
@@ -58,7 +58,7 @@ export class ConfirmarViajeClienteUseCase {
           
           // PERSISTENCIA: Guardamos la ruta del viaje (origen -> destino)
           v.ruta = rutaCoords;
-          v.tiempo_min = tiempoEstimado;
+          v.tiempo_minutos = tiempoEstimado;
           await this.viajeRepository.actualizar(v);
         }
       }
