@@ -73,7 +73,7 @@ export function setupSocket(server: any) {
           console.error(`Error desactivando conductor ${conductorId}`, err);
         }
         disconnectTimers.delete(conductorId);
-      }, 15000); // 15 segundos de gracia
+      }, 60000); // 60 segundos de gracia para manejar micro-cortes de internet
       
       disconnectTimers.set(conductorId, timer);
     });
