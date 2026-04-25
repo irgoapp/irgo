@@ -4,39 +4,29 @@ import { supabaseClient } from '../../shared/supabase.client';
 
 export class SupabasePrecioRepository implements IPrecioRepository {
   async buscarTarifaPorVehiculo(tipoVehiculo: string): Promise<Precio | null> {
-    // Intentamos buscar por el nombre que nos diste antes (vehiculo_tipo)
-    let { data, error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from('tarifas')
       .select('*')
       .eq('vehiculo_tipo', tipoVehiculo)
-      .maybeSingle();
+      .single();
 
-    // Si no lo encuentra, intentamos con el nombre que mencionaste ahora (tipo_vehiculo)
-    if (!data) {
-      const { data: altData } = await supabaseClient
-        .from('tarifas')
-        .select('*')
-        .eq('tipo_vehiculo', tipoVehiculo)
-        .maybeSingle();
-      data = altData;
-    }
+    if (error || !data) {
+      console.warn(`[Repository] Tarifa '${tipoVehiculo}' no encontrada. Intentando obtener tarifa general...`);
 
-    if (!data) {
-      console.warn(`[Repository] Tarifa '${tipoVehiculo}' no encontrada en vehiculo_tipo ni tipo_vehiculo. Usando respaldo...`);
-      
-      const { data: anyRate } = await supabaseClient.from('tarifas').select('*').limit(1);
-      
-      if (anyRate && anyRate.length > 0) {
+      const { data: allRates } = await supabaseClient.from('tarifas').select('*').limit(1);
+
+      if (allRates && allRates.length > 0) {
+        console.log(`[Repository] Usando tarifa de respaldo: ${allRates[0].vehiculo_tipo}`);
         return new Precio({
-          ...anyRate[0],
-          tipo_vehiculo: anyRate[0].vehiculo_tipo || anyRate[0].tipo_vehiculo
+          ...allRates[0],
+          tipo_vehiculo: allRates[0].vehiculo_tipo
         });
       }
 
-      console.error(`[Repository] 🚨 TOTAL FAIL: Sin tarifas en DB.`);
+      console.error(`[Repository] 🚨 TOTAL FAIL: Sin tarifas en DB. Usando valores Críticos.`);
       return new Precio({
         tipo_vehiculo: 'emergencia',
-        precio_por_km: 3, 
+        precio_por_km: 3,
         tarifa_minima_bs: 10,
         comision_por_solicitud: 0.5,
         comision_por_km: 0.3,
@@ -46,7 +36,7 @@ export class SupabasePrecioRepository implements IPrecioRepository {
 
     return new Precio({
       ...data,
-      tipo_vehiculo: data.vehiculo_tipo || data.tipo_vehiculo
+      tipo_vehiculo: data.vehiculo_tipo
     });
   }
 }

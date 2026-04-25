@@ -59,24 +59,28 @@ export class SupabaseConductorRepository implements IConductorRepository {
     offset: number = 0
   ): Promise<Conductor[]> {
     // LLAMADA RPC: Usamos la función optimizada de Supabase/PostGIS
-    const { data: drivers, error } = await supabaseClient.rpc('buscar_conductores_cercanos', {
-      lat_origen: lat,
-      lon_origen: lon,
-      radio_metros: radioKm * 1000 // Convertir a metros para la RPC
+    const { data: drivers, error } = await supabaseClient.rpc('conductores_cercanos', {
+      p_lat: lat,
+      p_lng: lon,
+      p_radio: radioKm * 1000 // Convertir a metros para la RPC
     });
 
     if (error) {
-      console.error("[Repository] Error en RPC buscar_conductores_cercanos:", error);
+      console.error("[Repository] Error en RPC conductores_cercanos:", error);
       throw new Error(error.message);
     }
     
-    // Mapeo plano directo de la RPC (lat/lon ya vienen como números)
-    const slice = (drivers || []).slice(offset, offset + limite);
+    // Mapeo y FILTRO por tipo de vehículo (Garantiza consistencia si la RPC no lo hace)
+    const filtered = (drivers || []).filter((d: any) => 
+      !tipoVehiculo || d.vehiculo_tipo === tipoVehiculo
+    );
+
+    const slice = filtered.slice(offset, offset + limite);
     return slice.map((d: any) => new Conductor({
       id: d.id,
-      disponible: true, // Si la RPC los devolvió es porque cumplen el filtro
+      disponible: true, 
       tipo_vehiculo: d.vehiculo_tipo,
-      ubicacion_actual: { lat: d.lat, lon: d.lon }
+      ubicacion_actual: { lat: d.lat || d.origen_lat, lon: d.lon || d.origen_lng } // Manejar variantes de nombre de la RPC
     }));
   }
 }
