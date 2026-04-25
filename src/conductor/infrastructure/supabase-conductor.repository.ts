@@ -45,21 +45,20 @@ export class SupabaseConductorRepository implements IConductorRepository {
     limite: number = 10,
     offset: number = 0
   ): Promise<Conductor[]> {
-    // Buscar en Supabase conductores disponibles
+    // Buscar en Supabase conductores disponibles con su posición mapeada
     const { data: drivers, error } = await supabaseClient
       .from('conductores')
-      .select('id, ubicacion, disponible, vehiculo_tipo')
+      .select('id, disponible, vehiculo_tipo, lat, lon')
       .eq('disponible', true);
-      // .eq('vehiculo_tipo', tipoVehiculo); // Filtro desactivado temporalmente
 
     if (error) throw new Error(error.message);
     
-    // Por ahora devolvemos el slice para las rondas.
-    // Tip: En producción esto debería ser una función RPC en Postgres para eficiencia máxima.
     const slice = (drivers || []).slice(offset, offset + limite);
     return slice.map((d: any) => new Conductor({
-      ...d,
-      tipo_vehiculo: d.vehiculo_tipo
+      id: d.id,
+      disponible: d.disponible,
+      tipo_vehiculo: d.vehiculo_tipo,
+      ubicacion_actual: { lat: d.lat, lon: d.lon }
     }));
   }
 }
