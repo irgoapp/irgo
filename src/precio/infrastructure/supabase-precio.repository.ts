@@ -7,21 +7,22 @@ export class SupabasePrecioRepository implements IPrecioRepository {
     const { data, error } = await supabaseClient
       .from('tarifas')
       .select('*')
-      .eq('tipo_vehiculo', tipoVehiculo)
+      .eq('vehiculo_tipo', tipoVehiculo)
       .single();
 
     if (error || !data) {
       console.warn(`[Repository] Tarifa '${tipoVehiculo}' no encontrada. Intentando obtener tarifa general...`);
       
-      // INTENTO 2: Intentar traer la primera tarifa disponible (Bypass para que funcione con todo)
       const { data: allRates } = await supabaseClient.from('tarifas').select('*').limit(1);
       
       if (allRates && allRates.length > 0) {
-        console.log(`[Repository] Usando tarifa de respaldo: ${allRates[0].tipo_vehiculo}`);
-        return new Precio(allRates[0]);
+        console.log(`[Repository] Usando tarifa de respaldo: ${allRates[0].vehiculo_tipo}`);
+        return new Precio({
+          ...allRates[0],
+          tipo_vehiculo: allRates[0].vehiculo_tipo
+        });
       }
 
-      // INTENTO 3: Último recurso (Valores hardcodeados)
       console.error(`[Repository] 🚨 TOTAL FAIL: Sin tarifas en DB. Usando valores Críticos.`);
       return new Precio({
         tipo_vehiculo: 'emergencia',
@@ -33,6 +34,9 @@ export class SupabasePrecioRepository implements IPrecioRepository {
       });
     }
 
-    return new Precio(data);
+    return new Precio({
+      ...data,
+      tipo_vehiculo: data.vehiculo_tipo
+    });
   }
 }
