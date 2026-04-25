@@ -1,6 +1,6 @@
 import { IPrecioRepository } from '../../domain/precio.repository';
 
-export class CalcularClientePrecioUseCase {
+export class CalcularComisionUseCase {
   constructor(private precioRepository: IPrecioRepository) {}
 
   async execute(dto: { distancia_km: number; tipo_vehiculo: string }): Promise<number> {
@@ -10,9 +10,16 @@ export class CalcularClientePrecioUseCase {
       throw new Error(`Tarifa no encontrada para vehículo: ${dto.tipo_vehiculo}`);
     }
 
-    const monto = dto.distancia_km * tarifa.precio_por_km;
-    const montoFinal = Math.max(monto, tarifa.tarifa_minima_bs);
+    // Comisión = fija por solicitud + por km
+    const comisionKm = dto.distancia_km * tarifa.comision_por_km;
+    const comisionTotal = tarifa.comision_por_solicitud + comisionKm;
     
-    return Number(montoFinal.toFixed(2));
+    // Aplica mínimo de comisión
+    const comisionFinal = Math.max(
+      comisionTotal, 
+      tarifa.comision_solicitud_minima
+    );
+    
+    return Number(comisionFinal.toFixed(2));
   }
 }

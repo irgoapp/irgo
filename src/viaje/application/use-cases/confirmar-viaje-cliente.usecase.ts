@@ -5,12 +5,14 @@ import { OfertaViajeConductorDto } from '../dto/out/oferta-viaje-conductor.dto';
 import { ConfirmarViajeDto } from '../dto/in/confirmar-viaje.dto';
 import { ViajeResponseDto } from '../dto/out/viaje-response.dto';
 import { ConsultarRutaMapaUseCase } from '../../../mapa/application/use-cases/consultar-ruta-mapa.usecase';
+import { CalcularComisionUseCase } from '../../../precio/application/use-cases/calcular-comision.usecase';
 
 export class ConfirmarViajeClienteUseCase {
   constructor(
     private viajeRepository: IViajeRepository,
     private conductorRepository: IConductorRepository,
-    private consultarRutaMapa: ConsultarRutaMapaUseCase
+    private consultarRutaMapa: ConsultarRutaMapaUseCase,
+    private calcularComisionUseCase: CalcularComisionUseCase
   ) {}
 
   async execute(dto: ConfirmarViajeDto): Promise<ViajeResponseDto> {
@@ -97,9 +99,16 @@ export class ConfirmarViajeClienteUseCase {
     for (const cond of conductores) {
       if (!cond.id || !cond.ubicacion_actual) continue;
       
+      const precioCliente = viaje.precio!;
+      const comision = await this.calcularComisionUseCase.execute({
+        distancia_km: viaje.distancia_km || 0,
+        tipo_vehiculo: viaje.tipo_vehiculo
+      });
+      const gananciaDriver = precioCliente - comision;
+
       const oferta = new OfertaViajeConductorDto(
         viaje,
-        Number((viaje.precio! * 0.85).toFixed(2)), // 15% Comisión
+        Number(gananciaDriver.toFixed(2)),
         viaje.distancia_km || 0,
         tiempoEstimado // Tiempo real calculado por MapsAPI (Origen->Destino)
       );

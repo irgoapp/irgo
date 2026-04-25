@@ -16,6 +16,7 @@ import { SupabaseConductorRepository } from '../../conductor/infrastructure/supa
 import { ConsultarRutaMapaUseCase } from '../../mapa/application/use-cases/consultar-ruta-mapa.usecase';
 import { MapaApiClient } from '../../mapa/infrastructure/mapa-api.client';
 import { CalcularClientePrecioUseCase } from '../../precio/application/use-cases/calcular-cliente-precio.usecase';
+import { CalcularComisionUseCase } from '../../precio/application/use-cases/calcular-comision.usecase';
 import { SupabasePrecioRepository } from '../../precio/infrastructure/supabase-precio.repository';
 import { emitTripUpdate } from '../../shared/socket.handler';
 
@@ -28,11 +29,12 @@ const precioRepository = new SupabasePrecioRepository();
 // Casos de Uso
 const consultarRutaMapaUseCase = new ConsultarRutaMapaUseCase(mapaRepository);
 const calcularClientePrecioUseCase = new CalcularClientePrecioUseCase(precioRepository);
+const calcularComisionUseCase = new CalcularComisionUseCase(precioRepository);
 
 const solicitarViajeUseCase = new SolicitarViajeUseCase(viajeRepository, conductorRepository);
 const aceptarViajeUseCase = new AceptarViajeUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase);
 const cotizarViajeUseCase = new CotizarViajeUseCase(consultarRutaMapaUseCase, calcularClientePrecioUseCase);
-const confirmarViajeClienteUseCase = new ConfirmarViajeClienteUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase);
+const confirmarViajeClienteUseCase = new ConfirmarViajeClienteUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase, calcularComisionUseCase);
 const cancelarViajeUseCase = new CancelarViajeUseCase(viajeRepository);
 const obtenerViajeUseCase = new ObtenerViajeUseCase(viajeRepository);
 const calificarViajeUseCase = new CalificarViajeUseCase(viajeRepository);

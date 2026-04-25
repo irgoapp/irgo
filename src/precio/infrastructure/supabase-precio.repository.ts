@@ -4,8 +4,16 @@ import { supabaseClient } from '../../shared/supabase.client';
 
 export class SupabasePrecioRepository implements IPrecioRepository {
   async buscarTarifaPorVehiculo(tipoVehiculo: string): Promise<Precio | null> {
-    const { data } = await supabaseClient.from('tarifas').select('*').eq('tipo_vehiculo', tipoVehiculo).single();
-    if (!data) return new Precio({ tipo_vehiculo: tipoVehiculo, precio_base: 5, precio_km: 1.2, precio_minuto: 0.5 });
+    const { data, error } = await supabaseClient
+      .from('tarifas')
+      .select('*')
+      .eq('tipo_vehiculo', tipoVehiculo)
+      .single();
+
+    if (error || !data) {
+      throw new Error(`No se encontró configuración de tarifas para el tipo: ${tipoVehiculo}`);
+    }
+
     return new Precio(data);
   }
 }

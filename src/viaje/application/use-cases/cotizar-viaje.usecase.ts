@@ -21,7 +21,6 @@ export class CotizarViajeUseCase {
     // 2. Calcular el precio oficial de la plataforma
     const precio = await this.calcularPrecio.execute({
       distancia_km: mapa.distancia_km,
-      tiempo_min: mapa.tiempo_minutos,
       tipo_vehiculo: dto.tipo_vehiculo || 'basico'
     });
 

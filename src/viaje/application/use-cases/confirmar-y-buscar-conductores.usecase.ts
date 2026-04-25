@@ -33,7 +33,6 @@ export class ConfirmarYBuscarConductoresUseCase {
     // Se lo pasamos al tarificador inteligente
     const recaudoFinal = await this.calcPrecio.execute({ 
       distancia_km: mapa.distancia_km,
-      tiempo_min: mapa.tiempo_minutos || 0,
       tipo_vehiculo: viaje.tipo_vehiculo || 'basico'
     });
 
