@@ -90,16 +90,28 @@ export function setupSocket(server: any) {
 export function emitirOfertaViaje(conductorId: string, oferta: any) {
   if (ioInstance) {
     const sala = `conductor_${conductorId}`;
-    const socketsEnSala = ioInstance.sockets.adapter.rooms.get(sala);
     
-    console.log(`[Socket] Intentando emitir a sala: ${sala}`);
-    console.log(`[Socket] Sockets en esa sala: ${socketsEnSala?.size ?? 0}`);
-    
-    ioInstance.to(sala).emit('oferta_viaje', oferta);
-    console.log(`[Sockets] 📨 OFERTA_VIAJE enviada al conductor ${conductorId}`);
-    return true;
+    try {
+      const socketsEnSala = ioInstance.sockets.adapter.rooms.get(sala);
+      
+      console.log(`[Socket] 🔍 DIAGNÓSTICO: Sala target: ${sala}`);
+      console.log(`[Socket] 👥 DIAGNÓSTICO: Dispositivos en sala: ${socketsEnSala?.size ?? 0}`);
+      
+      if (!socketsEnSala || socketsEnSala.size === 0) {
+        console.warn(`[Socket] ⚠️ Alerta: El conductor ${conductorId} no tiene sockets activos en la sala ${sala}. La oferta se perderá.`);
+      }
+
+      // Emisión con captura de error de serialización
+      ioInstance.to(sala).emit('oferta_viaje', oferta);
+      
+      console.log(`[Sockets] 📨 OFERTA_VIAJE emitida exitosamente a ${conductorId}`);
+      return true;
+    } catch (error: any) {
+      console.error(`[Sockets] ❌ Error CRÍTICO en ioInstance.emit:`, error);
+      return false;
+    }
   }
-  console.log(`[Socket] ioInstance no existe`);
+  console.log(`[Socket] ❌ Error: ioInstance no inicializada`);
   return false;
 }
 
