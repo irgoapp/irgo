@@ -5,11 +5,19 @@ import { supabaseClient } from '../../shared/supabase.client';
 export class SupabaseConductorRepository implements IConductorRepository {
   
   async buscarPorId(id: string): Promise<Conductor | null> {
-    const { data, error } = await supabaseClient.from('conductores').select('*').eq('id', id).single();
+    const { data, error } = await supabaseClient
+      .from('conductores')
+      .select('id, disponible, vehiculo_tipo, lat, lon')
+      .eq('id', id)
+      .single();
+
     if (error || !data) return null;
+    
     return new Conductor({
-      ...data,
-      tipo_vehiculo: data.vehiculo_tipo
+      id: data.id,
+      disponible: data.disponible,
+      tipo_vehiculo: data.vehiculo_tipo,
+      ubicacion_actual: { lat: data.lat, lon: data.lon }
     });
   }
 

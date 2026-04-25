@@ -24,9 +24,11 @@ export class AceptarViajeUseCase {
 
     // 1. Obtener ubicación del conductor que aceptó
     const conductor = await this.conductorRepository.buscarPorId(dto.conductor_id);
-    console.log(`[AceptarViaje] Conductor ${dto.conductor_id} encontrado. Ubicación:`, conductor?.ubicacion_actual);
+    
+    // LOG CRÍTICO para depurar en Railway
+    console.log("DATOS CONDUCTOR:", JSON.stringify(conductor, null, 2));
 
-    if (conductor && conductor.ubicacion_actual) {
+    if (conductor && conductor.ubicacion_actual && conductor.ubicacion_actual.lat) {
       try {
         console.log(`[AceptarViaje] Calculando ruta_recogida desde (${conductor.ubicacion_actual.lat}, ${conductor.ubicacion_actual.lon}) hasta origen cliente`);
         
