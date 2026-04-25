@@ -34,13 +34,13 @@ const start = async () => {
   try {
     const PORT = parseInt(process.env.PORT || '3005', 10);
     
-    // Montamos Socket.IO usando el servidor Nativo subyacente de Fastify ANTES del listen
-    setupSocket(fastify.server);
-
-    // Fastify requiere estar escuchando para darnos el objeto raw `server`
+    // Primero Fastify escucha
     await fastify.listen({ port: PORT, host: '0.0.0.0' });
     
-    console.log(`🚀 IRGO Backend Vertical listo y escuchando en puerto ${PORT}`);
+    // DESPUÉS montamos Socket.io sobre el servidor ya activo
+    setupSocket(fastify.server);
+    
+    console.log(`🚀 IRGO Backend Vertical listo en puerto ${PORT}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
