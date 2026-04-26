@@ -28,16 +28,16 @@ export class SupabaseConductorRepository implements IConductorRepository {
   }
 
   async actualizarUbicacion(id: string, lat: number, lng: number): Promise<boolean> {
-    const wkt = `POINT(${lng} ${lat})`;
-    const { error } = await supabaseClient
-      .from('conductores')
-      .update({
-        ubicacion: wkt,
-        ultima_ubicacion_at: new Date().toISOString(),
-      })
-      .eq('id', id);
+    const { error } = await supabaseClient.rpc('actualizar_ubicacion_conductor', {
+      p_id: id,
+      p_lat: lat,
+      p_lng: lng
+    });
     
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error(`[Repository] Error al actualizar ubicación con RPC:`, error);
+      throw new Error(error.message);
+    }
     return true;
   }
 
