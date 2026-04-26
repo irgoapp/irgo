@@ -33,7 +33,7 @@ export class ConfirmarYBuscarConductoresUseCase {
     // Se lo pasamos al tarificador inteligente
     const precios = await this.calcPrecio.execute({ 
       distancia_ruta: mapa.distancia_ruta,
-      tipo_vehiculo: viaje.tipo_vehiculo || 'basico'
+      tipo_vehiculo: viaje.tipo_vehiculo
     });
 
     viaje.monto_ruta = precios.monto_ruta; 

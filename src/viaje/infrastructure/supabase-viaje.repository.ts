@@ -103,7 +103,7 @@ export class SupabaseViajeRepository implements IViajeRepository {
       destino_texto: data.destino_texto,
       distancia_ruta: data.distancia_ruta,
       tiempo_ruta: data.tiempo_ruta,
-      tipo_vehiculo: data.tipo_vehiculo || 'basico',
+      tipo_vehiculo: data.tipo_vehiculo || 'moto',
       creado_en: new Date(data.created_at),
       buscando_at: data.buscando_at,
       asignado_at: data.asignado_at,

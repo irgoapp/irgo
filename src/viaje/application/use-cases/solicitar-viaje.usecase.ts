@@ -28,7 +28,7 @@ export class SolicitarViajeUseCase {
 
     const precios = await this.calcPrecio.execute({
       distancia_ruta: mapa.distancia_ruta,
-      tipo_vehiculo: dto.tipo_vehiculo || 'basico'
+      tipo_vehiculo: dto.tipo_vehiculo
     });
 
     // 2. Crear la entidad base del Viaje con datos reales
