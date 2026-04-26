@@ -5,6 +5,7 @@ import { OfertaViajeConductorDto } from '../dto/out/oferta-viaje-conductor.dto';
 import { ConfirmarViajeDto } from '../dto/in/confirmar-viaje.dto';
 import { ViajeResponseDto } from '../dto/out/viaje-response.dto';
 import { ConsultarRutaMapaUseCase } from '../../../mapa/application/use-cases/consultar-ruta-mapa.usecase';
+import { CalcularClientePrecioUseCase } from '../../../precio/application/use-cases/calcular-cliente-precio.usecase';
 import { CalcularComisionUseCase } from '../../../precio/application/use-cases/calcular-comision.usecase';
 
 export class ConfirmarViajeClienteUseCase {
@@ -12,6 +13,7 @@ export class ConfirmarViajeClienteUseCase {
     private viajeRepository: IViajeRepository,
     private conductorRepository: IConductorRepository,
     private consultarRutaMapa: ConsultarRutaMapaUseCase,
+    private calcularClientePrecio: CalcularClientePrecioUseCase,
     private calcularComisionUseCase: CalcularComisionUseCase
   ) { }
 
@@ -26,9 +28,25 @@ export class ConfirmarViajeClienteUseCase {
     // 2. Actualizamos con los datos finales del cliente
     viaje.destino = { lat: dto.destino_lat, lng: dto.destino_lng };
     viaje.destino_texto = dto.destino_texto;
-    viaje.monto_ruta = dto.monto_ruta;
-    viaje.distancia_ruta = dto.distancia_ruta;
-    viaje.tiempo_ruta = dto.tiempo_ruta;
+
+    // 🌟 SOBERANÍA DEL BACKEND: Recalculamos Ruta y Precio real
+    const mapa = await this.consultarRutaMapa.execute({
+      origen: viaje.origen,
+      destino: viaje.destino,
+      tipo_vehiculo: viaje.tipo_vehiculo
+    });
+
+    const precios = await this.calcularClientePrecio.execute({
+      distancia_ruta: mapa.distancia_ruta,
+      tipo_vehiculo: viaje.tipo_vehiculo
+    });
+
+    viaje.monto_ruta = precios.monto_ruta;
+    viaje.monto_conductor = precios.monto_conductor;
+    viaje.monto_comision = precios.monto_comision;
+    viaje.distancia_ruta = mapa.distancia_ruta;
+    viaje.tiempo_ruta = mapa.tiempo_ruta;
+    
     viaje.estado = 'buscando';
     viaje.buscando_at = new Date();
 

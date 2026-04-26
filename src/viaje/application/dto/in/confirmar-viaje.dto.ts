@@ -3,9 +3,9 @@ export class ConfirmarViajeDto {
   destino_lat: number;
   destino_lng: number;
   destino_texto: string;
-  monto_ruta: number;
-  distancia_ruta: number;
-  tiempo_ruta: number;
+  monto_ruta?: number;
+  distancia_ruta?: number;
+  tiempo_ruta?: number;
 
   constructor(data: any) {
     this.viaje_id = data.viaje_id;
