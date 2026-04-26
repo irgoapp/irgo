@@ -9,7 +9,8 @@ export class OfertaViajeConductorDto {
   viaje_id: string;
 
   // Datos Financieros 
-  monto_ruta: number;
+  monto_ruta: number;      // Lo que paga el cliente
+  monto_conductor: number; // Lo que gana el chofer neto
 
   // Datos Logísticos
   distancia_ruta: number;
@@ -32,15 +33,16 @@ export class OfertaViajeConductorDto {
 
   constructor(
     viaje: Viaje,
-    gananciaPura: number,
-    distanciaRutaOrigenADestino: number,
-    tiempoRutaOrigenADestino: number,
+    montoConductor: number,
+    distanciaRuta: number,
+    tiempoRuta: number,
     puntos_ruta?: any[]
   ) {
     this.viaje_id = viaje.id!;
 
     // Financiero
-    this.monto_ruta = gananciaPura;
+    this.monto_ruta = viaje.monto_ruta || 0;
+    this.monto_conductor = montoConductor;
 
     // Distancias y Tiempos
     this.distancia_ruta = distanciaRutaOrigenADestino;
