@@ -55,15 +55,16 @@ export class SupabaseConductorRepository implements IConductorRepository {
     lat: number, 
     lng: number, 
     radioKm: number, 
-    tipoVehiculo: string,
+    tipoVehiculo?: string,
     limite: number = 10,
     offset: number = 0
   ): Promise<Conductor[]> {
-    // LLAMADA RPC: Usamos la función optimizada de Supabase/PostGIS
+    // 1. LLAMADA RPC OPTIMIZADA: Ahora pasamos el tipo de vehículo directamente a la DB
     const { data: drivers, error } = await supabaseClient.rpc('conductores_cercanos', {
       p_lat: lat,
       p_lng: lng,
-      p_radio: radioKm * 1000 // Convertir a metros para la RPC
+      p_radio: radioKm * 1000,
+      p_tipo_vehiculo: tipoVehiculo // Se agrega este parámetro para filtrado nativo
     });
 
     if (error) {
@@ -71,17 +72,14 @@ export class SupabaseConductorRepository implements IConductorRepository {
       throw new Error(error.message);
     }
     
-    // Mapeo y FILTRO por tipo de vehículo (Garantiza consistencia si la RPC no lo hace)
-    const filtered = (drivers || []).filter((d: any) => 
-      !tipoVehiculo || d.tipo_vehiculo === tipoVehiculo
-    );
-
-    const slice = filtered.slice(offset, offset + limite);
+    // 2. MAPEO DIRECTO: Eliminamos el .filter() manual. 
+    // La DB ya nos entrega solo lo que necesitamos.
+    const slice = (drivers || []).slice(offset, offset + limite);
     return slice.map((d: any) => new Conductor({
       id: d.id,
       disponible: true, 
       tipo_vehiculo: d.tipo_vehiculo,
-      ubicacion_actual: { lat: d.lat || d.origen_lat, lng: d.lon || d.origen_lng }, // Estandarizado a LNG
+      ubicacion_actual: { lat: d.lat || d.origen_lat, lng: d.lng || d.lon || d.origen_lng }, // Soporte multi-campo
       ultima_ubicacion_at: d.ultima_ubicacion_at
     }));
   }
