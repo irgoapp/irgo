@@ -132,6 +132,15 @@ export class BotResponseBuilder {
     };
   }
 
+  static mensajeConductorLlegado(): TextMessage {
+    return {
+      type: 'text',
+      text: {
+        body: `🔔 *¡TU CONDUCTOR HA LLEGADO!*\n\nEl conductor ya está en el punto de recogida en IrGo. Por favor, acércate a la unidad.`
+      }
+    };
+  }
+
   static mensajeSinConductores(): InteractiveMessage {
     return {
       type: 'interactive',

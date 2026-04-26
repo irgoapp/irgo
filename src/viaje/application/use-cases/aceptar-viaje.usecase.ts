@@ -4,12 +4,14 @@ import { IViajeRepository } from '../../domain/viaje.repository';
 import { IConductorRepository } from '../../../conductor/domain/conductor.repository';
 import { ConsultarRutaMapaUseCase } from '../../../mapa/application/use-cases/consultar-ruta-mapa.usecase';
 import { emitirViajeTomado } from '../../../shared/socket.handler';
+import { WhatsappNotificationService } from '../../../whatsapp/application/services/whatsapp-notification.service';
 
 export class AceptarViajeUseCase {
   constructor(
     private viajeRepository: IViajeRepository,
     private conductorRepository: IConductorRepository,
-    private consultarRutaMapa: ConsultarRutaMapaUseCase
+    private consultarRutaMapa: ConsultarRutaMapaUseCase,
+    private whatsappNotification: WhatsappNotificationService
   ) {}
 
   async execute(dto: AceptarViajeDto): Promise<Viaje> {
@@ -62,6 +64,9 @@ export class AceptarViajeUseCase {
     
     // 📢 LIMPIEZA DE EVENTOS: Notificar que el viaje ya fue tomado
     emitirViajeTomado(viaje.id!);
+
+    // 📱 WHATSAPP: Notificar al cliente que ya tiene conductor
+    this.whatsappNotification.notificarConductorAsignado(viaje);
 
     return viaje;
   }

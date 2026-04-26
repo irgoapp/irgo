@@ -18,6 +18,9 @@ import { MapaApiClient } from '../../mapa/infrastructure/mapa-api.client';
 import { CalcularClientePrecioUseCase } from '../../precio/application/use-cases/calcular-cliente-precio.usecase';
 import { CalcularComisionUseCase } from '../../precio/application/use-cases/calcular-comision.usecase';
 import { SupabasePrecioRepository } from '../../precio/infrastructure/supabase-precio.repository';
+import { SupabaseClienteRepository } from '../../cliente/infrastructure/supabase-cliente.repository';
+import { WhatsappMetaClient } from '../../whatsapp/infrastructure/whatsapp-meta.client';
+import { WhatsappNotificationService } from '../../whatsapp/application/services/whatsapp-notification.service';
 import { emitTripUpdate } from '../../shared/socket.handler';
 
 // Repositorios e inyección cruzada por dependencias
@@ -25,20 +28,24 @@ const viajeRepository = new SupabaseViajeRepository();
 const conductorRepository = new SupabaseConductorRepository();
 const mapaRepository = new MapaApiClient();
 const precioRepository = new SupabasePrecioRepository();
+const clienteRepository = new SupabaseClienteRepository();
+const whatsappRepository = new WhatsappMetaClient();
 
-// Casos de Uso
+// Casos de Uso y Servicios
+const whatsappNotificationService = new WhatsappNotificationService(whatsappRepository, conductorRepository, clienteRepository);
+
 const consultarRutaMapaUseCase = new ConsultarRutaMapaUseCase(mapaRepository);
 const calcularClientePrecioUseCase = new CalcularClientePrecioUseCase(precioRepository);
 const calcularComisionUseCase = new CalcularComisionUseCase(precioRepository);
 
 const solicitarViajeUseCase = new SolicitarViajeUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase, calcularClientePrecioUseCase);
-const aceptarViajeUseCase = new AceptarViajeUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase);
+const aceptarViajeUseCase = new AceptarViajeUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase, whatsappNotificationService);
 const cotizarViajeUseCase = new CotizarViajeUseCase(consultarRutaMapaUseCase, calcularClientePrecioUseCase);
 const confirmarViajeClienteUseCase = new ConfirmarViajeClienteUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase, calcularClientePrecioUseCase, calcularComisionUseCase);
 const cancelarViajeUseCase = new CancelarViajeUseCase(viajeRepository);
 const obtenerViajeUseCase = new ObtenerViajeUseCase(viajeRepository);
 const calificarViajeUseCase = new CalificarViajeUseCase(viajeRepository);
-const marcarLlegadaUseCase = new MarcarLlegadaUseCase(viajeRepository);
+const marcarLlegadaUseCase = new MarcarLlegadaUseCase(viajeRepository, whatsappNotificationService);
 
 export async function viajeControllerPlugin(fastify: FastifyInstance, options: FastifyPluginOptions) {
   

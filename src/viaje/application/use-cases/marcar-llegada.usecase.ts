@@ -1,8 +1,12 @@
 import { IViajeRepository } from '../../domain/viaje.repository';
 import { Viaje } from '../../domain/viaje.entity';
+import { WhatsappNotificationService } from '../../../whatsapp/application/services/whatsapp-notification.service';
 
 export class MarcarLlegadaUseCase {
-  constructor(private viajeRepository: IViajeRepository) {}
+  constructor(
+    private viajeRepository: IViajeRepository,
+    private whatsappNotification: WhatsappNotificationService
+  ) {}
 
   async execute(viajeId: string): Promise<Viaje> {
     const viaje = await this.viajeRepository.buscarPorId(viajeId);
@@ -16,6 +20,9 @@ export class MarcarLlegadaUseCase {
     viaje.llegado_at = new Date();
 
     await this.viajeRepository.actualizarEstado(viajeId, 'llegado');
+
+    // 📱 WHATSAPP: Notificar al cliente que el conductor llegó
+    this.whatsappNotification.notificarConductorLlegado(viaje);
 
     return viaje;
   }
