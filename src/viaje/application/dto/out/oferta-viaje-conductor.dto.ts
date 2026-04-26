@@ -45,8 +45,8 @@ export class OfertaViajeConductorDto {
     this.monto_conductor = montoConductor;
 
     // Distancias y Tiempos
-    this.distancia_ruta = distanciaRutaOrigenADestino;
-    this.tiempo_ruta = tiempoRutaOrigenADestino;
+    this.distancia_ruta = distanciaRuta;
+    this.tiempo_ruta = tiempoRuta;
 
     // Ruta
     this.puntos_ruta = puntos_ruta;
