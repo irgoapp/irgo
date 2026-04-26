@@ -20,62 +20,61 @@ export function setupSocket(server: any) {
   io.on('connection', (socket) => {
     const conductorId = socket.handshake.auth.conductor_id;
 
-    if (!conductorId) {
-      console.log(`[Sockets] ❌ Conexión rechazada (Sin Conductor ID): ${socket.id}`);
-      socket.disconnect();
-      return;
+    if (conductorId) {
+      // --- LÓGICA DE CONDUCTOR ---
+      if (disconnectTimers.has(conductorId)) {
+        clearTimeout(disconnectTimers.get(conductorId)!);
+        disconnectTimers.delete(conductorId);
+        console.log(`[Sockets] ✅ Conductor ${conductorId} reconectó a tiempo`);
+      }
+
+      socket.join(`conductor_${conductorId}`);
+      
+      conductorRepo.cambiarDisponibilidad(conductorId, true)
+        .then(() => console.log(`[Sockets] ✅ Conductor ${conductorId} disponible en Supabase`))
+        .catch(err => console.error(`Error activando disponibilidad para ${conductorId}`, err));
+
+      console.log(`[Sockets] 🚕 Conductor ${conductorId} ONLINE en Socket: ${socket.id}`);
+
+      socket.on('actualizar_ubicacion', async (payload: { lat: number; lng: number }) => {
+         try {
+           const dto = new ActualizarUbicacionDto({
+             conductor_id: conductorId, 
+             lat: payload.lat, 
+             lng: payload.lng 
+           });
+           await ubicationCase.execute(dto);
+         } catch (err) {
+           console.log(`Error guardando GPS del Conductor ${conductorId}`, err);
+         }
+      });
+
+      socket.on('disconnect', async () => {
+        console.log(`[Sockets] ⚠️ Desconexión detectada del Conductor: ${conductorId}`);
+        const timer = setTimeout(async () => {
+          try {
+            await conductorRepo.cambiarDisponibilidad(conductorId, false);
+            console.log(`[Sockets] 🔴 Conductor ${conductorId} no disponible (timeout)`);
+          } catch (err) {
+            console.error(`Error desactivando conductor ${conductorId}`, err);
+          }
+          disconnectTimers.delete(conductorId);
+        }, 60000); 
+        disconnectTimers.set(conductorId, timer);
+      });
+    } else {
+      // --- LÓGICA DE CLIENTE / PWA ---
+      console.log(`[Sockets] 📱 Cliente (Pasajero) conectado en Socket: ${socket.id}`);
+      
+      socket.on('disconnect', () => {
+        console.log(`[Sockets] 📱 Cliente desconectado: ${socket.id}`);
+      });
     }
 
-    // Si reconecta antes de los 15 segundos cancela el timer de desconexión
-    if (disconnectTimers.has(conductorId)) {
-      clearTimeout(disconnectTimers.get(conductorId)!);
-      disconnectTimers.delete(conductorId);
-      console.log(`[Sockets] ✅ Conductor ${conductorId} reconectó a tiempo`);
-    }
-
-    socket.join(`conductor_${conductorId}`);
-    
-    // Automatización: Al conectar por socket, el conductor pasa a estar disponible
-    conductorRepo.cambiarDisponibilidad(conductorId, true)
-      .then(() => console.log(`[Sockets] ✅ Conductor ${conductorId} disponible en Supabase`))
-      .catch(err => console.error(`Error activando disponibilidad para ${conductorId}`, err));
-
-    console.log(`[Sockets] 🚕 Conductor ${conductorId} ONLINE en Socket: ${socket.id}`);
-
-    // Escuchador de Ubicaciones en GPS Tiempo Real
-    socket.on('actualizar_ubicacion', async (payload: { lat: number; lng: number }) => {
-       try {
-         const dto = new ActualizarUbicacionDto({
-           conductor_id: conductorId, 
-           lat: payload.lat, 
-           lng: payload.lng 
-         });
-         await ubicationCase.execute(dto);
-       } catch (err) {
-         console.log(`Error guardando GPS del Conductor ${conductorId}`, err);
-       }
-    });
-
-    // --- CLIENTE WEB ---
+    // --- LÓGICA COMÚN (PARA TODOS) ---
     socket.on('join_trip', (tripId: string) => {
       socket.join(`trip_${tripId}`);
-      console.log(`[Sockets] 📱 Cliente unido a sala de viaje: ${tripId}`);
-    });
-
-    socket.on('disconnect', async () => {
-      console.log(`[Sockets] ⚠️ Desconexión detectada: ${conductorId}`);
-      
-      const timer = setTimeout(async () => {
-        try {
-          await conductorRepo.cambiarDisponibilidad(conductorId, false);
-          console.log(`[Sockets] 🔴 Conductor ${conductorId} no disponible (timeout)`);
-        } catch (err) {
-          console.error(`Error desactivando conductor ${conductorId}`, err);
-        }
-        disconnectTimers.delete(conductorId);
-      }, 60000); // 60 segundos de gracia para manejar micro-cortes de internet
-      
-      disconnectTimers.set(conductorId, timer);
+      console.log(`[Sockets] 📱 Socket ${socket.id} unido a sala de viaje: ${tripId}`);
     });
   });
 
