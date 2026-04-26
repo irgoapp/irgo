@@ -13,7 +13,7 @@ Este documento resume los endpoints, DTOs y tablas de base de datos del sistema 
   - **Devuelve**: Objeto Viaje (id, cliente_id, estado, origen, destino, etc.)
 
 - **POST `/viaje/cotizar`** (Cotización Maestra)
-  - **Recibe**: `origen` {lat, lng}, `destino` {lat, lng}, `tipo` (string: 'moto' | 'auto')
+  - **Recibe**: `origen` {lat, lng}, `destino` {lat, lng}, `tipo` (string: 'moto' | 'auto' | 'delivery')
   - **Devuelve**: `monto_ruta` (number), `distancia_ruta` (number), `tiempo_ruta` (number), `ruta` (GeoJSON)
 
 - **POST `/viaje/:id/confirmar`** (Confirmación Cliente)
@@ -55,7 +55,7 @@ Este documento resume los endpoints, DTOs y tablas de base de datos del sistema 
   - **Devuelve**: Lista de viajes (id, origen_texto, destino_texto, monto_ruta, etc.)
 
 ### Tabla en Supabase: `conductores`
-- **Columnas**: `id`, `disponible` (boolean), `tipo_vehiculo` ('moto' | 'auto'), `ubicacion` (Geography), `ultima_ubicacion_at`.
+- **Columnas**: `id`, `disponible` (boolean), `tipo_vehiculo` ('moto' | 'auto' | 'delivery'), `ubicacion` (Geography), `ultima_ubicacion_at`.
 
 ---
 
@@ -68,7 +68,7 @@ Este documento resume los endpoints, DTOs y tablas de base de datos del sistema 
   - **Devuelve**: Precio (number), `moneda` ('USD' default).
 
 ### Tabla en Supabase: `tarifas`
-- **Columnas**: `id`, `tipo_vehiculo`, `precio_por_km`, `tarifa_minima_bs`, `comision_por_solicitud`, `comision_por_km`, `comision_solicitud_minima`.
+- **Columnas**: `id`, `tipo_vehiculo`, `precio_por_km`, `tarifa_minima_bs`, `comision_por_solicitud`, `comision_por_km`, `comision_solicitud_minima`, `comision_porcentaje`.
 
 ---
 
