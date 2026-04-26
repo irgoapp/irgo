@@ -29,13 +29,13 @@ export class MapaApiClient implements IMapaRepository {
       const data = await response.json();
       
       console.log('[MapaApiClient] data recibida:', JSON.stringify(data));
-      console.log('[MapaApiClient] distancia_km:', data.distanceKm);
+      console.log('[MapaApiClient] distancia_ruta:', data.distancia_ruta);
       console.log('[MapaApiClient] tiempo_ruta:', data.tiempo_ruta);
 
       return new Mapa({
         origen,
         destino,
-        distancia_km: data.distanceKm || 0,
+        distancia_ruta: data.distancia_ruta || 0,
         tiempo_ruta: data.tiempo_ruta || 0,
         geojson: data.geojson
       });

@@ -3,7 +3,7 @@ import { IPrecioRepository } from '../../domain/precio.repository';
 export class CalcularComisionUseCase {
   constructor(private precioRepository: IPrecioRepository) {}
 
-  async execute(dto: { distancia_km: number; tipo_vehiculo: string }): Promise<number> {
+  async execute(dto: { distancia_ruta: number; tipo_vehiculo: string }): Promise<number> {
     const tarifa = await this.precioRepository.buscarTarifaPorVehiculo(dto.tipo_vehiculo);
     
     if (!tarifa) {
@@ -11,7 +11,7 @@ export class CalcularComisionUseCase {
     }
 
     // Comisión = fija por solicitud + por km
-    const comisionKm = dto.distancia_km * tarifa.comision_por_km;
+    const comisionKm = dto.distancia_ruta * tarifa.comision_por_km;
     const comisionTotal = tarifa.comision_por_solicitud + comisionKm;
     
     // Aplica mínimo de comisión

@@ -43,12 +43,12 @@ export function setupSocket(server: any) {
     console.log(`[Sockets] 🚕 Conductor ${conductorId} ONLINE en Socket: ${socket.id}`);
 
     // Escuchador de Ubicaciones en GPS Tiempo Real
-    socket.on('actualizar_ubicacion', async (payload: { lat: number; lon: number }) => {
+    socket.on('actualizar_ubicacion', async (payload: { lat: number; lng: number }) => {
        try {
          const dto = new ActualizarUbicacionDto({
            conductor_id: conductorId, 
            lat: payload.lat, 
-           lon: payload.lon 
+           lng: payload.lng 
          });
          await ubicationCase.execute(dto);
        } catch (err) {

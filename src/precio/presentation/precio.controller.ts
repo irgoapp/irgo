@@ -10,11 +10,14 @@ export async function precioControllerPlugin(fastify: FastifyInstance, options: 
   fastify.post('/calcular', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const body: any = request.body;
-      if (!body.distancia_km || !body.tiempo_min || !body.tipo_vehiculo) {
+      if (!body.distancia_ruta || !body.tiempo_ruta || !body.tipo_vehiculo) {
         throw new Error('Parametros invalidos');
       }
 
-      const precio = await calcularClientePrecioUseCase.execute(body);
+      const precio = await calcularClientePrecioUseCase.execute({
+        distancia_ruta: body.distancia_ruta,
+        tipo_vehiculo: body.tipo_vehiculo
+      });
       return reply.code(200).send(new PrecioResponseDto(precio, 'USD'));
     } catch (error: any) {
       return reply.code(400).send({ error: error.message });

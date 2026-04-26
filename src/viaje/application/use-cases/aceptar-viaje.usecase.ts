@@ -30,7 +30,7 @@ export class AceptarViajeUseCase {
 
     if (conductor && conductor.ubicacion_actual && conductor.ubicacion_actual.lat) {
       try {
-        console.log(`[AceptarViaje] Calculando ruta_recogida desde (${conductor.ubicacion_actual.lat}, ${conductor.ubicacion_actual.lon}) hasta origen cliente`);
+        console.log(`[AceptarViaje] Calculando ruta_recogida desde (${conductor.ubicacion_actual.lat}, ${conductor.ubicacion_actual.lng}) hasta origen cliente`);
         
         // 2. Calcular Ruta Recogida (Conductor -> Origen)
         const mapaRecogida = await this.consultarRutaMapa.execute({

@@ -32,7 +32,7 @@ export class ConfirmarYBuscarConductoresUseCase {
 
     // Se lo pasamos al tarificador inteligente
     const recaudoFinal = await this.calcPrecio.execute({ 
-      distancia_km: mapa.distancia_km,
+      distancia_ruta: mapa.distancia_ruta,
       tipo_vehiculo: viaje.tipo_vehiculo || 'basico'
     });
 
@@ -54,7 +54,7 @@ export class ConfirmarYBuscarConductoresUseCase {
       const ofertaDto = new OfertaViajeConductorDto(
         viaje,
         Number((recaudoFinal * 0.85).toFixed(2)), // 15% Comisión IrGo
-        mapa.distancia_km, // Agregado dinámico real extraído de ruta-proxy
+        mapa.distancia_ruta, // Agregado dinámico real extraído de ruta-proxy
         mapa.tiempo_ruta || 10 // Tiempo extraído del motor Mapas
       );
 

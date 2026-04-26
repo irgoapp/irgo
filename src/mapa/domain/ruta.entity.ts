@@ -1,5 +1,5 @@
 export class Ruta {
-  puntos_coordenadas: Array<{ lat: number; lon: number }>;
+  puntos_coordenadas: Array<{ lat: number; lng: number }>;
   distancia_metros: number;
   tiempo_segundos: number;
   polilinea_geojson: any;

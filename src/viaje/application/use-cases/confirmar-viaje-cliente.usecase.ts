@@ -101,7 +101,7 @@ export class ConfirmarViajeClienteUseCase {
 
       const precioCliente = viaje.monto_ruta!;
       const comision = await this.calcularComisionUseCase.execute({
-        distancia_km: viaje.distancia_ruta || 0,
+        distancia_ruta: viaje.distancia_ruta || 0,
         tipo_vehiculo: viaje.tipo_vehiculo
       });
       const gananciaDriver = precioCliente - comision;

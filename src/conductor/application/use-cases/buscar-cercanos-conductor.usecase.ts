@@ -4,8 +4,8 @@ import { Conductor } from '../../domain/conductor.entity';
 export class BuscarCercanosConductorUseCase {
   constructor(private conductorRepository: IConductorRepository) {}
 
-  async execute(dto: { lat: number; lon: number; tipoVehiculo: string }): Promise<Conductor[]> {
-    if (!dto.lat || !dto.lon) throw new Error('Ubicación requerida');
-    return await this.conductorRepository.buscarCercanosDisponibles(dto.lat, dto.lon, 5, dto.tipoVehiculo);
+  async execute(dto: { lat: number; lng: number; tipoVehiculo: string }): Promise<Conductor[]> {
+    if (!dto.lat || !dto.lng) throw new Error('Ubicación requerida');
+    return await this.conductorRepository.buscarCercanosDisponibles(dto.lat, dto.lng, 5, dto.tipoVehiculo);
   }
 }

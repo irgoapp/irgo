@@ -22,7 +22,7 @@ export class HandleLocationUseCase {
     try {
       const inputDto = new IniciarViajeInDto({
         cliente_id: cliente.id!,
-        origen: { lat, lon: lng },
+        origen: { lat, lng },
         tipo_vehiculo: 'moto'
       });
 
