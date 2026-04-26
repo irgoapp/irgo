@@ -20,10 +20,12 @@ export class HandleLocationUseCase {
 
     // Cuando el usuario manda loc, creamos BÓRRADOR en viaje sin despertar a los carros
     try {
+      const tipoVehiculo = session.contexto?.tipo_vehiculo || 'moto'; // Fallback a moto por seguridad
+      
       const inputDto = new IniciarViajeInDto({
         cliente_id: cliente.id!,
         origen: { lat, lng },
-        tipo_vehiculo: 'moto'
+        tipo_vehiculo: tipoVehiculo
       });
 
       const viajeOut = await this.iniciarBorradorViajeUseCase.execute(inputDto);

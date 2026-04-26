@@ -24,16 +24,17 @@ export class BotResponseBuilder {
         type: 'button',
         header: {
           type: 'text',
-          text: 'IrGo Moto',
+          text: 'IrGo - Elige tu Servicio',
         },
         body: {
-          text: '¡Bienvenido! Servicio exclusivo en Santa Cruz de la Sierra.\n\n¿Listo para pedir tu moto?',
+          text: '¡Bienvenido! ¿Cómo deseas moverte hoy?\n\nSelecciona una opción para comenzar:',
         },
-        footer: { text: 'Taxi Libre - Tu viaje seguro' },
+        footer: { text: 'IrGo & Taxi Libre' },
         action: {
           buttons: [
-            { type: 'reply', reply: { id: 'pedir_moto', title: 'Pedir Moto' } },
-            { type: 'reply', reply: { id: 'info', title: 'Ver Info' } },
+            { type: 'reply', reply: { id: 'pedir_moto', title: '🛵 Moto' } },
+            { type: 'reply', reply: { id: 'pedir_auto', title: '🚗 Auto' } },
+            { type: 'reply', reply: { id: 'pedir_delivery', title: '📦 Delivery' } },
           ],
         },
       },

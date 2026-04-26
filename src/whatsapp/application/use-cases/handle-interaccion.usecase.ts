@@ -11,12 +11,22 @@ export class HandleInteraccionUseCase {
   async execute(telefono: string, replyId: string): Promise<void> {
     console.log(`[HandleInteraccion] Acción: ${replyId} para ${telefono}`);
 
-    if (replyId === 'pedir_moto') {
+    if (replyId === 'pedir_moto' || replyId === 'pedir_auto' || replyId === 'pedir_delivery') {
+      const mapeo: any = {
+        'pedir_moto': 'moto',
+        'pedir_auto': 'auto',
+        'pedir_delivery': 'delivery'
+      };
+      const tipo = mapeo[replyId];
+
       await this.whatsappRepo.enviarMensaje({
         telefono,
         texto: BotResponseBuilder.pedirUbicacion()
       });
-      await this.sessionRepo.upsertSession(telefono, 'AWAITING_LOCATION', {});
+
+      await this.sessionRepo.upsertSession(telefono, 'AWAITING_LOCATION', {
+        tipo_vehiculo: tipo
+      });
       return;
     }
 
