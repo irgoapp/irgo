@@ -4,7 +4,8 @@ import { supabaseClient } from '../../shared/supabase.client';
 
 export class SupabaseAuthRepository implements IAuthRepository {
   async loginConductor(telefono: string, passwordHash: string): Promise<AuthSession | null> {
-    const emailFalso = `${telefono.trim()}@taxilibre.bo`;
+    const cleanedTelefono = telefono.trim().replace(/\D/g, '').replace(/^591/, '');
+    const emailFalso = `${cleanedTelefono}@irgodriver.com`;
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({
       email: emailFalso,
@@ -18,7 +19,7 @@ export class SupabaseAuthRepository implements IAuthRepository {
     const { data: qData, error: qError } = await supabaseClient
       .from('conductores')
       .select('nombre, telefono, vehiculo_placa, vehiculo_marca, vehiculo_modelo, vehiculo_color, tipo_vehiculo, calificacion, viajes_completados')
-      .eq('telefono', telefono)
+      .eq('telefono', cleanedTelefono)
       .single();
 
     if (!qError && qData) {
