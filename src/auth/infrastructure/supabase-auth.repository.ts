@@ -1,13 +1,23 @@
 import { IAuthRepository } from '../domain/auth.repository';
 import { AuthSession } from '../domain/auth.entity';
 import { supabaseClient } from '../../shared/supabase.client';
+import { createClient } from '@supabase/supabase-js';
 
 export class SupabaseAuthRepository implements IAuthRepository {
   async loginConductor(telefono: string, passwordHash: string): Promise<AuthSession | null> {
     const cleanedTelefono = telefono.trim().replace(/\D/g, '').replace(/^591/, '');
     const emailFalso = `${cleanedTelefono}@irgodriver.com`;
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
+    // CRÍTICO: Creamos una instancia local para el login. 
+    // Esto evita que la sesión del conductor "ensucie" el cliente global admin.
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SERVICE_ROLE_KEY || '';
+    
+    const localAuthClient = createClient(supabaseUrl, supabaseKey, {
+        auth: { persistSession: false, autoRefreshToken: false }
+    });
+
+    const { data, error } = await localAuthClient.auth.signInWithPassword({
       email: emailFalso,
       password: passwordHash
     });

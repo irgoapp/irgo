@@ -21,9 +21,11 @@ if (!supabaseUrl || !supabaseKey) {
   console.log(`🚀 [SUPABASE] Inicializando cliente centralizado... URL detectada: ${supabaseUrl.substring(0, 20)}...`);
 }
 
+// Cliente de Supabase especializado para uso Administrativo (Backend)
 export const supabaseClient = createClient(supabaseUrl, supabaseKey, {
   auth: {
     autoRefreshToken: false,
-    persistSession: false
+    persistSession: false,
+    detectSessionInUrl: false
   }
 });
