@@ -19,14 +19,14 @@ export class CotizarViajeUseCase {
     });
 
     // 2. Calcular el precio oficial de la plataforma
-    const precio = await this.calcularPrecio.execute({
+    const precios = await this.calcularPrecio.execute({
       distancia_ruta: mapa.distancia_ruta,
       tipo_vehiculo: dto.tipo_vehiculo || 'moto'
     });
 
     // 3. Empacar todo para el cliente (mismo formato que antes pero centralizado)
     return {
-      monto_ruta: precio,
+      monto_ruta: precios.monto_ruta,
       distancia_ruta: mapa.distancia_ruta,
       tiempo_ruta: mapa.tiempo_ruta,
       ruta: mapa.geojson // El gusano de puntos GPS para dibujar en la Web/App

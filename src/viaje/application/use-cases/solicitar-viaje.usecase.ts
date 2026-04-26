@@ -26,7 +26,7 @@ export class SolicitarViajeUseCase {
       destino: { lat: dto.destino.lat, lng: dto.destino.lng }
     });
 
-    const montoTotal = await this.calcPrecio.execute({
+    const precios = await this.calcPrecio.execute({
       distancia_ruta: mapa.distancia_ruta,
       tipo_vehiculo: dto.tipo_vehiculo || 'basico'
     });
@@ -39,7 +39,7 @@ export class SolicitarViajeUseCase {
       destino: { lat: dto.destino.lat, lng: dto.destino.lng },
       destino_texto: dto.destino_texto,
       tipo_vehiculo: dto.tipo_vehiculo,
-      monto_ruta: montoTotal,
+      monto_ruta: precios.monto_ruta,
       distancia_ruta: mapa.distancia_ruta,
       tiempo_ruta: mapa.tiempo_ruta,
       ruta: mapa.geojson,
@@ -49,19 +49,17 @@ export class SolicitarViajeUseCase {
     // 3. Insertarlo oficialmente en BD
     const viajeGuardado = await this.viajeRepository.crear(viaje);
 
-    // 3. Buscar los conductores más cercanos
+    // 4. Buscar los conductores más cercanos
     const tipo = dto.tipo_vehiculo;
     const cercanos = await this.conductorRepository.buscarCercanosDisponibles(dto.origen.lat, dto.origen.lng, 5, tipo);
 
     // 5. Emitir el JSON de Oferta REAL a todos vía WebSockets
-    const montoConductor = Number((viajeGuardado.monto_ruta! * 0.85).toFixed(2)); // 15% Comisión IrGo
-
     for (const conductor of cercanos) {
       if (!conductor.id) continue;
       
       const ofertaDto = new OfertaViajeConductorDto(
         viajeGuardado,
-        montoConductor, 
+        precios.monto_conductor, 
         viajeGuardado.distancia_ruta || 0,
         viajeGuardado.tiempo_ruta || 0
       );
