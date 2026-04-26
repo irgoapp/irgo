@@ -14,7 +14,7 @@ export class ConfirmarYBuscarConductoresUseCase {
     private calcPrecio: CalcularClientePrecioUseCase
   ) {}
 
-  async execute(dto: { viaje_id: string; destino: { lat: number; lon: number } }): Promise<Viaje> {
+  async execute(dto: { viaje_id: string; destino: { lat: number; lng: number } }): Promise<Viaje> {
     // 1. Validar el viaje existente
     const viaje = await this.viajeRepository.buscarPorId(dto.viaje_id);
     if (!viaje) throw new Error('Viaje no encontrado');
@@ -36,7 +36,7 @@ export class ConfirmarYBuscarConductoresUseCase {
       tipo_vehiculo: viaje.tipo_vehiculo || 'basico'
     });
 
-    viaje.precio = recaudoFinal; 
+    viaje.monto_ruta = recaudoFinal; 
     
     // Guardamos la información monetaria fuerte en la Base de Datos
     await this.viajeRepository.actualizarEstado(viaje.id!, 'buscando');
@@ -45,7 +45,7 @@ export class ConfirmarYBuscarConductoresUseCase {
 
     // 3. Motor de Búsqueda Masiva de Conductores
     const tipo = viaje.tipo_vehiculo;
-    const cercanos = await this.conductorRepository.buscarCercanosDisponibles(viaje.origen.lat, viaje.origen.lon, 5, tipo);
+    const cercanos = await this.conductorRepository.buscarCercanosDisponibles(viaje.origen.lat, viaje.origen.lng, 5, tipo);
 
     // 4. Emitir Lluvias de Ofertas en Sockets
     for (const conductor of cercanos) {
@@ -55,7 +55,7 @@ export class ConfirmarYBuscarConductoresUseCase {
         viaje,
         Number((recaudoFinal * 0.85).toFixed(2)), // 15% Comisión IrGo
         mapa.distancia_km, // Agregado dinámico real extraído de ruta-proxy
-        mapa.tiempo_minutos || 10 // Tiempo extraído del motor Mapas
+        mapa.tiempo_ruta || 10 // Tiempo extraído del motor Mapas
       );
 
       // Mutamos temporalmente en RAM el objeto interno para empujarle la manguera de puntos topográficos de MapLibre

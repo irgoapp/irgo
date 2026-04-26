@@ -5,7 +5,7 @@ export class MapaApiClient implements IMapaRepository {
   // Usamos el nombre exacto de la variable que pusiste en Railway
   private apiUrl = process.env.MAPS_API_URL || process.env.NEXT_PUBLIC_MAPS_API_URL || 'taxi-libre-production.up.railway.app';
 
-  async calcularRuta(origen: { lat: number, lon: number }, destino: { lat: number, lon: number }): Promise<Mapa> {
+  async calcularRuta(origen: { lat: number, lng: number }, destino: { lat: number, lng: number }): Promise<Mapa> {
     try {
       const host = this.apiUrl.startsWith('http') ? this.apiUrl : `https://${this.apiUrl}`;
       const url = `${host}/api/rutas/calcular`;
@@ -16,8 +16,8 @@ export class MapaApiClient implements IMapaRepository {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          origin: { lat: origen.lat, lng: origen.lon },
-          destination: { lat: destino.lat, lng: destino.lon },
+          origin: { lat: origen.lat, lng: origen.lng },
+          destination: { lat: destino.lat, lng: destino.lng },
           vehicleType: 'moto'
         })
       });
@@ -30,13 +30,13 @@ export class MapaApiClient implements IMapaRepository {
       
       console.log('[MapaApiClient] data recibida:', JSON.stringify(data));
       console.log('[MapaApiClient] distancia_km:', data.distanceKm);
-      console.log('[MapaApiClient] durationMin:', data.durationMin);
+      console.log('[MapaApiClient] tiempo_ruta:', data.tiempo_ruta);
 
       return new Mapa({
         origen,
         destino,
         distancia_km: data.distanceKm || 0,
-        tiempo_minutos: data.durationMin || 0,
+        tiempo_ruta: data.tiempo_ruta || 0,
         geojson: data.geojson
       });
 

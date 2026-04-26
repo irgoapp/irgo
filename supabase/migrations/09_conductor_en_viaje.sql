@@ -21,7 +21,7 @@ RETURNS TABLE (
     nombre VARCHAR,
     telefono VARCHAR,
     vehiculo_placa VARCHAR,
-    vehiculo_tipo VARCHAR,
+    tipo_vehiculo VARCHAR,
     vehiculo_color VARCHAR,
     distancia_metros DOUBLE PRECISION
 ) 
@@ -35,7 +35,7 @@ BEGIN
         c.nombre,
         c.telefono,
         c.vehiculo_placa,
-        c.vehiculo_tipo::VARCHAR,
+        c.tipo_vehiculo::VARCHAR,
         c.vehiculo_color,
         ST_Distance(
             c.ubicacion, 

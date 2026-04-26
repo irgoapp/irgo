@@ -9,7 +9,7 @@ export class OfertaViajeConductorDto {
   viaje_id: string;
 
   // Datos Financieros 
-  monto: number;
+  monto_ruta: number;
 
   // Datos Logísticos
   distancia_ruta: number;
@@ -17,10 +17,10 @@ export class OfertaViajeConductorDto {
 
   // Ubicaciones puras 
   origen_lat: number;
-  origen_lon: number;
+  origen_lng: number;
   origen_texto: string;
   destino_lat: number;
-  destino_lon: number;
+  destino_lng: number;
   destino_texto: string;
 
   // Dibujo Polyline Cartográfica
@@ -39,7 +39,7 @@ export class OfertaViajeConductorDto {
     this.viaje_id = viaje.id!;
 
     // Financiero
-    this.monto = gananciaPura;
+    this.monto_ruta = gananciaPura;
 
     // Distancias y Tiempos
     this.distancia_ruta = distanciaRutaOrigenADestino;
@@ -47,11 +47,11 @@ export class OfertaViajeConductorDto {
 
     // Ubicaciones
     this.origen_lat = viaje.origen.lat;
-    this.origen_lon = viaje.origen.lon;
+    this.origen_lng = viaje.origen.lng;
     this.origen_texto = viaje.origen_texto || 'Calle no identificada';
 
     this.destino_lat = viaje.destino.lat;
-    this.destino_lon = viaje.destino.lon;
+    this.destino_lng = viaje.destino.lng;
     this.destino_texto = viaje.destino_texto || 'Destino no identificado';
 
     // Cliente

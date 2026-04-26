@@ -10,6 +10,7 @@ export class ViajeResponseDto {
   destino_texto?: string;
   monto_ruta: number;
   distancia_ruta: number;
+  tiempo_ruta: number;
   conductor_id?: string;
   conductores?: any;
   buscando_at?: string;
@@ -25,12 +26,13 @@ export class ViajeResponseDto {
     this.id = viaje.id || '';
     this.estado = viaje.estado;
     this.origen_lat = viaje.origen.lat;
-    this.origen_lng = viaje.origen.lon;
+    this.origen_lng = viaje.origen.lng;
     this.destino_lat = viaje.destino.lat;
-    this.destino_lng = viaje.destino.lon;
+    this.destino_lng = viaje.destino.lng;
     this.destino_texto = viaje.destino_texto || '';
-    this.monto_ruta = viaje.precio || 0;
-    this.distancia_ruta = viaje.distancia_km || 0;
+    this.monto_ruta = viaje.monto_ruta || 0;
+    this.distancia_ruta = viaje.distancia_ruta || 0;
+    this.tiempo_ruta = viaje.tiempo_ruta || 0;
     this.conductor_id = viaje.conductor_id;
     this.buscando_at = viaje.buscando_at?.toISOString();
     this.asignado_at = viaje.asignado_at?.toISOString();

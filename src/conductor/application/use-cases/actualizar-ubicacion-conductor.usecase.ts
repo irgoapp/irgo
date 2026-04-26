@@ -6,7 +6,7 @@ export class ActualizarUbicacionConductorUseCase {
 
   async execute(dto: ActualizarUbicacionDto) {
     dto.validar();
-    await this.conductorRepository.actualizarUbicacion(dto.conductor_id, dto.lat, dto.lon);
+    await this.conductorRepository.actualizarUbicacion(dto.conductor_id, dto.lat, dto.lng);
     return { exito: true };
   }
 }

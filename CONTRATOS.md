@@ -1,186 +1,109 @@
-# CONTRATOS DE COMUNICACIÓN IRGO-BACKEND
+# DOCUMENTACIÓN DE CONTRATOS - IRGO BACKEND
 
-Este documento detalla los endpoints de la API y los eventos de Sockets actualmente operativos, con sus nombres de parámetros exactos para asegurar la compatibilidad entre el Backend, la App Cliente y la App Conductor.
-
----
-
-## 🚕 MÓDULO DE VIAJES (`/viaje`)
-
-### 💰 Cotizar Viaje
-*   **Endpoint**: `POST /viaje/cotizar`
-*   **Body**: 
-    ```json
-    {
-      "origen": { "lat": number, "lon": number },
-      "destino": { "lat": number, "lon": number },
-      "tipo": string (ej: "basico", "moto", "auto")
-    }
-    ```
-*   **Respuesta**: 
-    ```json
-    {
-      "monto": number,
-      "distancia_km": number,
-      "tiempo_minutos": number,
-      "ruta": GeoJSON_Object
-    }
-    ```
-
-### ✅ Confirmar y Solicitar Viaje (Cliente)
-*   **Endpoint**: `POST /viaje/:id/confirmar`
-*   **Body**: 
-    ```json
-    {
-      "destino_lat": number,
-      "destino_lng": number,
-      "destino_texto": string,
-      "monto": number,
-      "distancia_km": number,
-      "tiempo_minutos": number
-    }
-    ```
-
-### 🚕 Aceptar Viaje (Conductor)
-*   **Endpoint**: `POST /viaje/:id/aceptar`
-*   **Body**: 
-    ```json
-    {
-      "conductor_id": string
-    }
-    ```
-
-### 🏁 Marcar Llegada del Conductor
-*   **Endpoint**: `POST /viaje/:id/llegue`
-*   **Body**: `{}`
-
-### ❌ Cancelar Viaje
-*   **Endpoint**: `POST /viaje/:id/cancelar`
-*   **Body**: 
-    ```json
-    {
-      "motivo": string
-    }
-    ```
-
-### ⭐ Calificar Viaje
-*   **Endpoint**: `POST /viaje/:id/calificar`
-*   **Body**: 
-    ```json
-    {
-      "rating": number (1-5)
-    }
-    ```
+Este documento resume los endpoints, DTOs y tablas de base de datos del sistema IrGo Backend.
 
 ---
 
-## 📈 MÓDULO DE PRECIOS (`/precio`)
+## DOMINIO: VIAJE
 
-### 🧮 Calcular Precio Estimado
-*   **Endpoint**: `POST /precio/calcular`
-*   **Body**: 
-    ```json
-    {
-      "distancia_km": number,
-      "tiempo_minutos": number,
-      "tipo_vehiculo": string
-    }
-    ```
+### Endpoints:
 
----
+- **POST `/viaje/`** (Solicitar Viaje)
+  - **Recibe**: `cliente_id` (string), `origen_lat` (number), `origen_lng` (number), `origen_texto` (string?), `destino_lat` (number), `destino_lng` (number), `destino_texto` (string?), `tipo_vehiculo` (string)
+  - **Devuelve**: Objeto Viaje (id, cliente_id, estado, origen, destino, etc.)
 
-## 🆔 MÓDULO DE AUTENTICACIÓN (`/auth`)
+- **POST `/viaje/cotizar`** (Cotización Maestra)
+  - **Recibe**: `origen` {lat, lng}, `destino` {lat, lng}, `tipo` (string: 'moto' | 'auto')
+  - **Devuelve**: `monto_ruta` (number), `distancia_ruta` (number), `tiempo_ruta` (number), `ruta` (GeoJSON)
 
-### 🔑 Login
-*   **Endpoint**: `POST /auth/login`
-*   **Body**: 
-    ```json
-    {
-      "telefono": string (o "usuario"),
-      "password": string
-    }
-    ```
+- **POST `/viaje/:id/confirmar`** (Confirmación Cliente)
+  - **Recibe**: `viaje_id` (string), `destino_lat` (number), `destino_lng` (number), `destino_texto` (string), `monto_ruta` (number), `distancia_ruta` (number), `tiempo_ruta` (number)
+  - **Devuelve**: Objeto Viaje actualizado.
 
----
+- **POST `/viaje/:id/aceptar`** (Aceptación Conductor)
+  - **Recibe**: `conductor_id` (string) en el body.
+  - **Devuelve**: Objeto Viaje actualizado.
 
-## 👤 MÓDULO DE CLIENTES (`/cliente`)
+- **POST `/viaje/:id/cancelar`**
+  - **Recibe**: `motivo` (string)
+  - **Devuelve**: `{ ok: boolean }`
 
-### 📱 Registro/Login vía WhatsApp
-*   **Endpoint**: `POST /cliente/auth/whatsapp`
-*   **Body**: 
-    ```json
-    {
-      "telefono": string,
-      "nombre": string
-    }
-    ```
+- **POST `/viaje/:id/llegue`**
+  - **Devuelve**: Objeto Viaje con estado 'llegado'.
+
+### Tabla en Supabase: `solicitudes`
+- **Columnas**: `id`, `cliente_id`, `conductor_id`, `origen` (Geography), `origen_lat`, `origen_lng`, `origen_texto`, `destino_lat`, `destino_lng`, `destino_texto`, `monto_ruta` (Bs), `distancia_ruta` (KM), `tiempo_ruta` (Min), `tipo_vehiculo`, `estado`, `ruta` (JSONB), `ruta_recogida` (JSONB), `buscando_at`, `asignado_at`, `llegado_at`, `iniciado_at`, `completado_at`, `cancelado_at`.
 
 ---
 
-## 🏎️ MÓDULO DE CONDUCTORES (`/conductor`)
+## DOMINIO: CONDUCTOR
 
-### 📍 Actualizar Ubicación (REST)
-*   **Endpoint**: `PUT /conductor/:id/ubicacion`
-*   **Body**: 
-    ```json
-    {
-      "lat": number,
-      "lon": number
-    }
-    ```
+### Endpoints:
 
-### 🟢 Cambiar Disponibilidad
-*   **Endpoint**: `PUT /conductor/:id/disponibilidad`
-*   **Body**: 
-    ```json
-    {
-      "disponible": boolean (o "true"/1)
-    }
-    ```
+- **PUT `/conductor/:id/ubicacion`**
+  - **Recibe**: `lat` (number), `lng` (number)
+  - **Devuelve**: `{ success: true }`
 
----
+- **GET `/conductor/:id/ubicacion`**
+  - **Devuelve**: `{ lat: number, lng: number }`
 
-## 🔌 EVENTOS DE SOCKETS (Socket.io)
+- **PUT `/conductor/:id/disponibilidad`**
+  - **Recibe**: `disponible` (boolean/string/number)
+  - **Devuelve**: `{ ok: true, disponible: boolean }`
 
-### 📡 Canales de Escucha (Subscribe)
-*   **`conductor_{conductorId}`**: El conductor debe unirse a esta sala para recibir ofertas.
-*   **`trip_{tripId}`**: El cliente debe unirse a esta sala para recibir actualizaciones de su viaje.
+- **GET `/conductor/:id/historial`**
+  - **Devuelve**: Lista de viajes (id, origen_texto, destino_texto, monto_ruta, etc.)
 
-### 📤 Eventos Enviados por el Servidor (Emits)
-*   **`oferta_viaje`**: Enviado al canal `conductor_{conductorId}`.
-    ```json
-    {
-      "viaje_id": string,
-      "monto": number,
-      "distancia_ruta": number,
-      "tiempo_minutos": number,
-      "origen_lat": number,
-      "origen_lon": number,
-      "origen_texto": string,
-      "destino_lat": number,
-      "destino_lon": number,
-      "destino_texto": string,
-      "ruta": any[] (puntos GPS),
-      "cliente_nombre_corto": string,
-      "cliente_calificacion": number
-    }
-    ```
-*   **`trip_updated`**: Enviado al canal `trip_{tripId}`. Entrega un objeto `ViajeResponseDto` completo.
-
-### 📥 Eventos Recibidos por el Servidor (Listeners)
-*   **`actualizar_ubicacion`**: El APK del conductor envía su GPS.
-    ```json
-    {
-      "lat": number,
-      "lon": number
-    }
-    ```
-*   **`join_trip`**: El cliente se une al ID del viaje para seguimiento.
-    ```json
-    "trip_id_string"
-    ```
+### Tabla en Supabase: `conductores`
+- **Columnas**: `id`, `disponible` (boolean), `tipo_vehiculo` ('moto' | 'auto'), `ubicacion` (Geography), `ultima_ubicacion_at`.
 
 ---
 
-## 🟢 ESTÁNDARES GLOBALES
-*   **Tiempo**: Siempre en **`tiempo_minutos`**.
-*   **Coordenadas**: El estándar del backend es utilizar **`lat`** y **`lon`** (o **`lng`** en algunos DTOs específicos de confirmación, ver tabla arriba).
+## DOMINIO: PRECIO
+
+### Endpoints:
+
+- **POST `/precio/calcular`**
+  - **Recibe**: `distancia_ruta` (number), `tiempo_ruta` (number), `tipo_vehiculo` (string)
+  - **Devuelve**: Precio (number), `moneda` ('USD' default).
+
+### Tabla en Supabase: `tarifas`
+- **Columnas**: `id`, `tipo_vehiculo`, `precio_por_km`, `tarifa_minima_bs`, `comision_por_solicitud`, `comision_por_km`, `comision_solicitud_minima`.
+
+---
+
+## DOMINIO: MAPA
+
+### Endpoints:
+
+- **POST `/mapa/ruta`**
+  - **Recibe**: `origen` {lat, lng}, `destino` {lat, lng}
+  - **Devuelve**: Objeto Mapa con `distancia_ruta`, `tiempo_ruta`, `geojson`.
+
+---
+
+## DOMINIO: WHATSAPP
+
+### Endpoints:
+
+- **GET `/whatsapp/webhook`** (Verificación)
+  - **Parámetros Hub**: `hub.mode`, `hub.verify_token`, `hub.challenge`.
+
+- **POST `/whatsapp/webhook`** (Recepción)
+  - **Recibe**: Payload dinámico de Meta (text, location, interactive).
+
+### Tabla en Supabase: `sesiones_whatsapp`
+- **Columnas**: `telefono` (PK), `estado`, `contexto` (JSONB), `ultima_actividad`.
+
+---
+
+## DOMINIO: CLIENTE
+
+### Endpoints:
+
+- **POST `/cliente/auth/whatsapp`**
+  - **Recibe**: `telefono` (string), `nombre` (string)
+  - **Devuelve**: Objeto Cliente (id, nombre, telefono).
+
+### Tabla en Supabase: `clientes`
+- **Columnas**: `id`, `nombre`, `telefono`, `calificacion`.

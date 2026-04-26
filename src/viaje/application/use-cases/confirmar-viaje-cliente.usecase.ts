@@ -24,11 +24,11 @@ export class ConfirmarViajeClienteUseCase {
     if (viaje.estado !== 'borrador') throw new Error('El viaje ya no es un borrador');
 
     // 2. Actualizamos con los datos finales del cliente
-    viaje.destino = { lat: dto.destino_lat, lon: dto.destino_lng };
+    viaje.destino = { lat: dto.destino_lat, lng: dto.destino_lng };
     viaje.destino_texto = dto.destino_texto;
-    viaje.precio = dto.monto;
-    viaje.distancia_km = dto.distancia_km;
-    viaje.tiempo_min = dto.duracion_min;
+    viaje.monto_ruta = dto.monto_ruta;
+    viaje.distancia_ruta = dto.distancia_ruta;
+    viaje.tiempo_ruta = dto.tiempo_ruta;
     viaje.estado = 'buscando';
     viaje.buscando_at = new Date();
 
@@ -50,7 +50,7 @@ export class ConfirmarViajeClienteUseCase {
       if (v) {
         // RUTA PRINCIPAL: Origen -> Destino del cliente
         const mapa = await this.consultarRutaMapa.execute({ origen: v.origen, destino: v.destino });
-        tiempoEstimado = mapa.tiempo_minutos || 10;
+        tiempoEstimado = mapa.tiempo_ruta || 10;
 
         // Aplanar el GeoJSON antes de guardar (Requerimiento IrGo_Backend)
         if (mapa.geojson?.features) {
@@ -58,7 +58,7 @@ export class ConfirmarViajeClienteUseCase {
 
           // PERSISTENCIA: Guardamos la ruta del viaje (origen -> destino)
           v.ruta = rutaCoords;
-          v.tiempo_min = tiempoEstimado;
+          v.tiempo_ruta = tiempoEstimado;
           await this.viajeRepository.actualizar(v);
         }
       }
@@ -87,7 +87,7 @@ export class ConfirmarViajeClienteUseCase {
 
     const conductores = await this.conductorRepository.buscarCercanosDisponibles(
       viaje.origen.lat,
-      viaje.origen.lon,
+      viaje.origen.lng,
       5, // Radio 5km para mayor alcance
       viaje.tipo_vehiculo,
       limite,
@@ -99,9 +99,9 @@ export class ConfirmarViajeClienteUseCase {
     for (const cond of conductores) {
       if (!cond.id || !cond.ubicacion_actual) continue;
 
-      const precioCliente = viaje.precio!;
+      const precioCliente = viaje.monto_ruta!;
       const comision = await this.calcularComisionUseCase.execute({
-        distancia_km: viaje.distancia_km || 0,
+        distancia_km: viaje.distancia_ruta || 0,
         tipo_vehiculo: viaje.tipo_vehiculo
       });
       const gananciaDriver = precioCliente - comision;
@@ -109,7 +109,7 @@ export class ConfirmarViajeClienteUseCase {
       const oferta = new OfertaViajeConductorDto(
         viaje,
         Number(gananciaDriver.toFixed(2)),
-        viaje.distancia_km || 0,
+        viaje.distancia_ruta || 0,
         tiempoEstimado // Tiempo real calculado por MapsAPI (Origen->Destino)
       );
 

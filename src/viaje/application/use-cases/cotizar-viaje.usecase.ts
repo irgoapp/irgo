@@ -8,8 +8,8 @@ export class CotizarViajeUseCase {
   ) {}
 
   async execute(dto: {
-    origen: { lat: number; lon: number };
-    destino: { lat: number; lon: number };
+    origen: { lat: number; lng: number };
+    destino: { lat: number; lng: number };
     tipo_vehiculo?: string;
   }) {
     // 1. Obtener la ruta topográfica real (distancia y geojson)
@@ -26,9 +26,9 @@ export class CotizarViajeUseCase {
 
     // 3. Empacar todo para el cliente (mismo formato que antes pero centralizado)
     return {
-      monto: precio,
-      distancia_km: mapa.distancia_km,
-      tiempo_minutos: mapa.tiempo_minutos,
+      monto_ruta: precio,
+      distancia_ruta: mapa.distancia_km,
+      tiempo_ruta: mapa.tiempo_ruta,
       ruta: mapa.geojson // El gusano de puntos GPS para dibujar en la Web/App
     };
   }

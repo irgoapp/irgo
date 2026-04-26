@@ -21,18 +21,19 @@ export class SupabaseConductorRepository implements IConductorRepository {
     return new Conductor({
       id: d.id,
       disponible: d.disponible,
-      tipo_vehiculo: d.vehiculo_tipo,
-      ubicacion_actual: { lat: d.lat, lon: d.lon }
+      tipo_vehiculo: d.tipo_vehiculo,
+      ubicacion_actual: { lat: d.lat, lng: d.lon }, // La DB devuelve 'lon', mapeamos a 'lng'
+      ultima_ubicacion_at: d.ultima_ubicacion_at
     });
   }
 
-  async actualizarUbicacion(id: string, lat: number, lon: number): Promise<boolean> {
-    const wkt = `POINT(${lon} ${lat})`;
+  async actualizarUbicacion(id: string, lat: number, lng: number): Promise<boolean> {
+    const wkt = `POINT(${lng} ${lat})`;
     const { error } = await supabaseClient
       .from('conductores')
       .update({
         ubicacion: wkt,
-        ultima_posicion_at: new Date().toISOString(),
+        ultima_ubicacion_at: new Date().toISOString(),
       })
       .eq('id', id);
     
@@ -52,7 +53,7 @@ export class SupabaseConductorRepository implements IConductorRepository {
 
   async buscarCercanosDisponibles(
     lat: number, 
-    lon: number, 
+    lng: number, 
     radioKm: number, 
     tipoVehiculo: string,
     limite: number = 10,
@@ -61,7 +62,7 @@ export class SupabaseConductorRepository implements IConductorRepository {
     // LLAMADA RPC: Usamos la función optimizada de Supabase/PostGIS
     const { data: drivers, error } = await supabaseClient.rpc('conductores_cercanos', {
       p_lat: lat,
-      p_lng: lon,
+      p_lng: lng,
       p_radio: radioKm * 1000 // Convertir a metros para la RPC
     });
 
@@ -72,15 +73,16 @@ export class SupabaseConductorRepository implements IConductorRepository {
     
     // Mapeo y FILTRO por tipo de vehículo (Garantiza consistencia si la RPC no lo hace)
     const filtered = (drivers || []).filter((d: any) => 
-      !tipoVehiculo || d.vehiculo_tipo === tipoVehiculo
+      !tipoVehiculo || d.tipo_vehiculo === tipoVehiculo
     );
 
     const slice = filtered.slice(offset, offset + limite);
     return slice.map((d: any) => new Conductor({
       id: d.id,
       disponible: true, 
-      tipo_vehiculo: d.vehiculo_tipo,
-      ubicacion_actual: { lat: d.lat || d.origen_lat, lon: d.lon || d.origen_lng } // Manejar variantes de nombre de la RPC
+      tipo_vehiculo: d.tipo_vehiculo,
+      ubicacion_actual: { lat: d.lat || d.origen_lat, lng: d.lon || d.origen_lng }, // Estandarizado a LNG
+      ultima_ubicacion_at: d.ultima_ubicacion_at
     }));
   }
 }

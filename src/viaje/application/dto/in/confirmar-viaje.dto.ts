@@ -3,18 +3,18 @@ export class ConfirmarViajeDto {
   destino_lat: number;
   destino_lng: number;
   destino_texto: string;
-  monto: number;
-  distancia_km: number;
-  duracion_min: number;
+  monto_ruta: number;
+  distancia_ruta: number;
+  tiempo_ruta: number;
 
   constructor(data: any) {
     this.viaje_id = data.viaje_id;
     this.destino_lat = data.destino_lat;
     this.destino_lng = data.destino_lng;
     this.destino_texto = data.destino_texto;
-    this.monto = data.monto;
-    this.distancia_km = data.distancia_km;
-    this.duracion_min = data.duracion_min;
+    this.monto_ruta = data.monto_ruta;
+    this.distancia_ruta = data.distancia_ruta;
+    this.tiempo_ruta = data.tiempo_ruta;
   }
 
   validar() {

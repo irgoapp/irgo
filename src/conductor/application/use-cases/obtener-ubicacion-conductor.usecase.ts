@@ -9,7 +9,7 @@ export class ObtenerUbicacionConductorUseCase {
     
     return {
       lat: conductor.ubicacion_actual.lat,
-      lng: conductor.ubicacion_actual.lon
+      lng: conductor.ubicacion_actual.lng
     };
   }
 }

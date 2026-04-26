@@ -7,7 +7,7 @@ export class SupabasePrecioRepository implements IPrecioRepository {
     const { data, error } = await supabaseClient
       .from('tarifas')
       .select('*')
-      .eq('vehiculo_tipo', tipoVehiculo)
+      .eq('tipo_vehiculo', tipoVehiculo)
       .single();
 
     if (error || !data) {
@@ -16,10 +16,10 @@ export class SupabasePrecioRepository implements IPrecioRepository {
       const { data: allRates } = await supabaseClient.from('tarifas').select('*').limit(1);
 
       if (allRates && allRates.length > 0) {
-        console.log(`[Repository] Usando tarifa de respaldo: ${allRates[0].vehiculo_tipo}`);
+        console.log(`[Repository] Usando tarifa de respaldo: ${allRates[0].tipo_vehiculo}`);
         return new Precio({
           ...allRates[0],
-          tipo_vehiculo: allRates[0].vehiculo_tipo
+          tipo_vehiculo: allRates[0].tipo_vehiculo
         });
       }
 
@@ -36,7 +36,7 @@ export class SupabasePrecioRepository implements IPrecioRepository {
 
     return new Precio({
       ...data,
-      tipo_vehiculo: data.vehiculo_tipo
+      tipo_vehiculo: data.tipo_vehiculo
     });
   }
 }

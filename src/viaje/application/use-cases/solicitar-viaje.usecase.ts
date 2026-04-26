@@ -19,12 +19,12 @@ export class SolicitarViajeUseCase {
     // 1. Calcular pre-precio y crear la entidad base del Viaje
     const viaje = new Viaje({
       cliente_id: dto.cliente_id,
-      origen: dto.origen,
+      origen: { lat: dto.origen.lat, lng: dto.origen.lng },
       origen_texto: dto.origen_texto,
-      destino: dto.destino,
+      destino: { lat: dto.destino.lat, lng: dto.destino.lng },
       destino_texto: dto.destino_texto,
       tipo_vehiculo: dto.tipo_vehiculo,
-      precio: 10.50 // TODO: Se inyectaría lógica del módulo 'precio'
+      monto_ruta: 10.50 // TODO: Se inyectaría lógica del módulo 'precio'
     });
 
     // 2. Insertarlo oficialmente como estado 'buscando' / 'borrador' en BD
@@ -32,7 +32,7 @@ export class SolicitarViajeUseCase {
 
     // 3. Buscar los conductores más cercanos
     const tipo = dto.tipo_vehiculo;
-    const cercanos = await this.conductorRepository.buscarCercanosDisponibles(dto.origen.lat, dto.origen.lon, 5, tipo);
+    const cercanos = await this.conductorRepository.buscarCercanosDisponibles(dto.origen.lat, dto.origen.lng, 5, tipo);
 
     // 4. Emitir el JSON de Oferta a todos vía WebSockets
     for (const conductor of cercanos) {

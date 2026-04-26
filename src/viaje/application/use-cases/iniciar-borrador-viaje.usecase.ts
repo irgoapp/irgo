@@ -12,10 +12,10 @@ export class IniciarBorradorViajeUseCase {
     const viaje = new Viaje({
       cliente_id: dto.cliente_id,
       origen: dto.origen,
-      destino: { lat: 0, lon: 0 }, 
+      destino: { lat: 0, lng: 0 }, 
       tipo_vehiculo: dto.tipo_vehiculo,
       estado: 'borrador',
-      precio: 0
+      monto_ruta: 0
     });
 
     const creado = await this.viajeRepository.crear(viaje);

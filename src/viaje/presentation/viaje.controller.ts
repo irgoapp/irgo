@@ -79,7 +79,7 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
   fastify.post('/cotizar', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const { origen, destino, tipo } = request.body as any;
-      console.log(`[ViajeController] 💰 Cotizando viaje: ${tipo} (${origen.lat},${origen.lon}) -> (${destino.lat},${destino.lon})`);
+      console.log(`[ViajeController] 💰 Cotizando viaje: ${tipo} (${origen.lat},${origen.lng}) -> (${destino.lat},${destino.lng})`);
       const cotizacion = await cotizarViajeUseCase.execute({
         origen,
         destino,
