@@ -32,15 +32,15 @@ fastify.register(clienteControllerPlugin, { prefix: '/cliente' });
 
 const start = async () => {
   try {
-    const PORT = parseInt(process.env.PORT || '8080', 10);
+    const port = Number(process.env.PORT) || 8080;
     
     // Primero Fastify escucha en todas las interfaces para Railway
-    await fastify.listen({ port: PORT, host: '0.0.0.0' });
+    await fastify.listen({ port: port, host: '0.0.0.0' });
     
     // DESPUÉS montamos Socket.io sobre el servidor ya activo
     setupSocket(fastify.server);
     
-    console.log(`🚀 IRGO Backend Vertical listo en puerto ${PORT}`);
+    console.log(`🚀 IRGO Backend Vertical listo en puerto ${port}`);
 
     // Manejo de señales de apagado (Graceful Shutdown)
     const shutdown = async () => {
