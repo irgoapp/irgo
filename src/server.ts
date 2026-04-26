@@ -32,7 +32,7 @@ fastify.register(clienteControllerPlugin, { prefix: '/cliente' });
 
 const start = async () => {
   try {
-    const port = Number(process.env.PORT) || 8080;
+    const port = process.env.PORT ? parseInt(process.env.PORT) : 8080;
     
     // Primero Fastify escucha en todas las interfaces para Railway
     await fastify.listen({ port: port, host: '0.0.0.0' });
