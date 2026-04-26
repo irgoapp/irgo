@@ -3,6 +3,7 @@ import { Viaje } from '../../domain/viaje.entity';
 import { IViajeRepository } from '../../domain/viaje.repository';
 import { IConductorRepository } from '../../../conductor/domain/conductor.repository';
 import { ConsultarRutaMapaUseCase } from '../../../mapa/application/use-cases/consultar-ruta-mapa.usecase';
+import { emitirViajeTomado } from '../../../shared/socket.handler';
 
 export class AceptarViajeUseCase {
   constructor(
@@ -58,6 +59,9 @@ export class AceptarViajeUseCase {
 
     // Actualizamos el viaje con el nuevo conductor y la ruta de recogida calculada (Usando bloqueo atómico)
     await this.viajeRepository.asignarConductor(viaje.id!, dto.conductor_id, viaje.ruta_recogida || []);
+    
+    // 📢 LIMPIEZA DE EVENTOS: Notificar que el viaje ya fue tomado
+    emitirViajeTomado(viaje.id!);
 
     return viaje;
   }

@@ -1,6 +1,6 @@
 import { IViajeRepository } from '../../domain/viaje.repository';
 import { IConductorRepository } from '../../../conductor/domain/conductor.repository';
-import { emitirOfertaViaje } from '../../../shared/socket.handler';
+import { emitirOfertaViaje, emitirViajeExpirado } from '../../../shared/socket.handler';
 import { OfertaViajeConductorDto } from '../dto/out/oferta-viaje-conductor.dto';
 import { ConfirmarViajeDto } from '../dto/in/confirmar-viaje.dto';
 import { ViajeResponseDto } from '../dto/out/viaje-response.dto';
@@ -95,6 +95,15 @@ export class ConfirmarViajeClienteUseCase {
     setTimeout(async () => {
       // RONDA 2: Los siguientes 10
       await this.ejecutarRonda(viajeId, 10, 5, rutaCoords, tiempoEstimado);
+
+      // ESPERA FINAL PARA EXPIRACIÓN (Opcional, pero recomendado para cerrar modales)
+      setTimeout(async () => {
+         const vFinal = await this.viajeRepository.buscarPorId(viajeId);
+         if (vFinal && vFinal.estado === 'buscando') {
+            console.log(`[MatchingEngine] Viaje ${viajeId} expirado sin conductores.`);
+            emitirViajeExpirado(viajeId);
+         }
+      }, 15000);
     }, 10000);
   }
 

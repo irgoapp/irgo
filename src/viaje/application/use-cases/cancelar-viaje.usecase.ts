@@ -1,4 +1,5 @@
 import { IViajeRepository } from '../../domain/viaje.repository';
+import { emitirViajeCancelado } from '../../../shared/socket.handler';
 
 export class CancelarViajeUseCase {
   constructor(private viajeRepository: IViajeRepository) {}
@@ -14,6 +15,11 @@ export class CancelarViajeUseCase {
 
     const exito = await this.viajeRepository.actualizarEstado(dto.viaje_id, 'cancelado');
     
+    if (exito && dto.cancelado_por === 'cliente') {
+       // 📢 LIMPIEZA DE EVENTOS: Notificar a conductores que el cliente canceló
+       emitirViajeCancelado(dto.viaje_id);
+    }
+
     console.log(`[Viaje] ${dto.viaje_id} cancelado por ${dto.cancelado_por}. Motivo: ${dto.motivo}`);
     
     return exito;

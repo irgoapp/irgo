@@ -123,3 +123,33 @@ export function emitTripUpdate(tripId: string, data: any) {
     console.log(`[Sockets] 📢 Notificación de actualización enviada al viaje ${tripId}`);
   }
 }
+
+/**
+ * Notifica a los conductores que estaban viendo la oferta que ya fue tomada por otro.
+ */
+export function emitirViajeTomado(viajeId: string) {
+  if (ioInstance) {
+    ioInstance.to(`trip_${viajeId}`).emit('viaje_tomado_por_otro', { viaje_id: viajeId });
+    console.log(`[Sockets] 📢 Evento viaje_tomado_por_otro enviado para viaje ${viajeId}`);
+  }
+}
+
+/**
+ * Notifica que el cliente canceló el viaje.
+ */
+export function emitirViajeCancelado(viajeId: string) {
+  if (ioInstance) {
+    ioInstance.to(`trip_${viajeId}`).emit('viaje_cancelado_por_cliente', { viaje_id: viajeId });
+    console.log(`[Sockets] 📢 Evento viaje_cancelado_por_cliente enviado para viaje ${viajeId}`);
+  }
+}
+
+/**
+ * Notifica que el tiempo de búsqueda expiró sin encontrar conductores.
+ */
+export function emitirViajeExpirado(viajeId: string) {
+  if (ioInstance) {
+    ioInstance.to(`trip_${viajeId}`).emit('viaje_expirado', { viaje_id: viajeId });
+    console.log(`[Sockets] 📢 Evento viaje_expirado enviado para viaje ${viajeId}`);
+  }
+}
