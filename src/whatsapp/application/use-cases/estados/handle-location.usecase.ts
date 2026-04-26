@@ -36,7 +36,7 @@ export class HandleLocationUseCase {
       
       await this.whatsappRepo.enviarMensaje({
         telefono: session.telefono,
-        texto: BotResponseBuilder.linkParaDestino(link)
+        texto: BotResponseBuilder.mensajeLinkDestino(link)
       });
 
       // Actualizar sesión pidiendo destino

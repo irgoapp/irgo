@@ -13,7 +13,7 @@ export class HandleConfirmationUseCase {
     if (replyId === 'confirmar_no' || replyId === 'cancelar') {
       await this.whatsappRepo.enviarMensaje({
         telefono: session.telefono,
-        texto: BotResponseBuilder.cancelacionConfirmada()
+        texto: BotResponseBuilder.mensajeCancelacionConfirmada()
       });
       await this.sessionRepo.upsertSession(session.telefono, 'START', {});
     }
@@ -22,7 +22,7 @@ export class HandleConfirmationUseCase {
       // Como ya generamos el viaje en AWAITING_LOCATION, solo queda notificar
       await this.whatsappRepo.enviarMensaje({
         telefono: session.telefono,
-        texto: BotResponseBuilder.confirmandoBusqueda()
+        texto: BotResponseBuilder.mensajeBuscandoConductor()
       });
     }
   }

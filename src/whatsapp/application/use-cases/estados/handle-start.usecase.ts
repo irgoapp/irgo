@@ -19,7 +19,7 @@ export class HandleStartUseCase {
     // 2. Enviaremos el mensaje de bienvenida con BOTONES
     await this.whatsappRepo.enviarMensaje({
       telefono,
-      texto: BotResponseBuilder.bienvenida()
+      texto: BotResponseBuilder.mensajeBienvenida()
     });
   }
 }

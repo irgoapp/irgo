@@ -21,7 +21,7 @@ export class HandleInteraccionUseCase {
 
       await this.whatsappRepo.enviarMensaje({
         telefono,
-        texto: BotResponseBuilder.pedirUbicacion()
+        texto: BotResponseBuilder.mensajePedirUbicacion()
       });
 
       await this.sessionRepo.upsertSession(telefono, 'AWAITING_LOCATION', {
@@ -50,7 +50,7 @@ export class HandleInteraccionUseCase {
     if (replyId === 'confirmar_no' || replyId === 'cancelar') {
         await this.whatsappRepo.enviarMensaje({
             telefono,
-            texto: BotResponseBuilder.cancelacionConfirmada()
+            texto: BotResponseBuilder.mensajeCancelacionConfirmada()
         });
         await this.sessionRepo.upsertSession(telefono, 'START', {});
         return;
