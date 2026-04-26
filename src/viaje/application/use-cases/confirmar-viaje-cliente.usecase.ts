@@ -49,7 +49,11 @@ export class ConfirmarViajeClienteUseCase {
       const v = await this.viajeRepository.buscarPorId(viajeId);
       if (v) {
         // RUTA PRINCIPAL: Origen -> Destino del cliente
-        const mapa = await this.consultarRutaMapa.execute({ origen: v.origen, destino: v.destino });
+        const mapa = await this.consultarRutaMapa.execute({ 
+          origen: v.origen, 
+          destino: v.destino,
+          tipo_vehiculo: v.tipo_vehiculo
+        });
         tiempoEstimado = mapa.tiempo_ruta || 10;
 
         // Aplanar el GeoJSON antes de guardar (Requerimiento IrGo_Backend)

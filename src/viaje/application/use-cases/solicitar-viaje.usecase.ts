@@ -23,7 +23,8 @@ export class SolicitarViajeUseCase {
     // 1. INTEGRACIÓN CARTOGRÁFICA Y FINANCIERA (Real-time)
     const mapa = await this.consultarRutaMapa.execute({
       origen: { lat: dto.origen.lat, lng: dto.origen.lng },
-      destino: { lat: dto.destino.lat, lng: dto.destino.lng }
+      destino: { lat: dto.destino.lat, lng: dto.destino.lng },
+      tipo_vehiculo: dto.tipo_vehiculo
     });
 
     const precios = await this.calcPrecio.execute({

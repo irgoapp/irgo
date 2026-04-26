@@ -5,12 +5,12 @@ export class MapaApiClient implements IMapaRepository {
   // Usamos el nombre exacto de la variable que pusiste en Railway
   private apiUrl = process.env.MAPS_API_URL || process.env.NEXT_PUBLIC_MAPS_API_URL || 'taxi-libre-production.up.railway.app';
 
-  async calcularRuta(origen: { lat: number, lng: number }, destino: { lat: number, lng: number }): Promise<Mapa> {
+  async calcularRuta(origen: { lat: number, lng: number }, destino: { lat: number, lng: number }, tipoVehiculo?: string): Promise<Mapa> {
     try {
       const host = this.apiUrl.startsWith('http') ? this.apiUrl : `https://${this.apiUrl}`;
       const url = `${host}/api/rutas/calcular`;
 
-      console.log(`[MapaApiClient] Consultando Ruta Oficial en: ${url}`);
+      console.log(`[MapaApiClient] Consultando Ruta Oficial (${tipoVehiculo || 'moto'}) en: ${url}`);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -18,7 +18,7 @@ export class MapaApiClient implements IMapaRepository {
         body: JSON.stringify({
           origin: { lat: origen.lat, lng: origen.lng },
           destination: { lat: destino.lat, lng: destino.lng },
-          vehicleType: 'moto'
+          vehicleType: tipoVehiculo || 'moto'
         })
       });
 
@@ -32,6 +32,8 @@ export class MapaApiClient implements IMapaRepository {
       console.log('[MapaApiClient] distancia_ruta:', data.distancia_ruta);
       console.log('[MapaApiClient] tiempo_ruta:', data.tiempo_ruta);
 
+      // IGNORAR monto_ruta: Solo extraemos datos logísticos.
+      // La lógica de precios reside ahora en CalcularClientePrecioUseCase (Backend).
       return new Mapa({
         origen,
         destino,

@@ -27,7 +27,8 @@ export class ConfirmarYBuscarConductoresUseCase {
     // Interceptamos la petición con nuestro motor de Mapas
     const mapa = await this.consultarRutaMapa.execute({
       origen: viaje.origen,
-      destino: viaje.destino
+      destino: viaje.destino,
+      tipo_vehiculo: viaje.tipo_vehiculo
     });
 
     // Se lo pasamos al tarificador inteligente
