@@ -18,7 +18,7 @@ fastify.setErrorHandler(errorHandler);
 
 // Health Check oficial para Railway
 fastify.get('/', async () => {
-  return { status: 'ok', service: 'irgo-backend', timestamp: new Date().toISOString() };
+  return { status: 'ok', message: 'IRGO Backend Is Live' };
 });
 
 // Registrar dominios verticalizados
