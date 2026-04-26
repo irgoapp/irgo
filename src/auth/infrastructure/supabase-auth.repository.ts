@@ -18,7 +18,7 @@ export class SupabaseAuthRepository implements IAuthRepository {
     let perfilData = {};
     const { data: qData, error: qError } = await supabaseClient
       .from('conductores')
-      .select('nombre, telefono, vehiculo_placa, vehiculo_marca, vehiculo_modelo, vehiculo_color, tipo_vehiculo, calificacion, viajes_completados')
+      .select('nombre, apellido, foto_url, telefono, vehiculo_placa, vehiculo_marca, vehiculo_modelo, vehiculo_color, tipo_vehiculo, calificacion')
       .eq('id', data.user?.id)
       .single();
 

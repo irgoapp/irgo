@@ -145,7 +145,7 @@ export class SupabaseViajeRepository implements IViajeRepository {
   async obtenerHistorial(conductorId: string): Promise<any[]> {
     const { data, error } = await supabaseClient
       .from('solicitudes')
-      .select('id, origen_texto, destino_texto, estado, created_at, distancia_ruta, monto_ruta, completado_at')
+      .select('id, origen_texto, destino_texto, estado, created_at, distancia_ruta, monto_conductor')
       .eq('conductor_id', conductorId)
       .order('created_at', { ascending: false })
       .limit(50);
