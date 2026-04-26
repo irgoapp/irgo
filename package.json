@@ -4,9 +4,9 @@
   "description": "API independiente para el módulo IRGO",
   "main": "src/server.ts",
   "scripts": {
-    "start": "node dist/server.js",
+    "start": "npm run build && node dist/server.js",
     "dev": "nodemon --exec ts-node src/server.ts",
-    "build": "npx tsc"
+    "build": "tsc"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.0",
