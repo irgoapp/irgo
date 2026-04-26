@@ -141,6 +141,15 @@ export class BotResponseBuilder {
     };
   }
 
+  static mensajeViajeIniciado(): TextMessage {
+    return {
+      type: 'text',
+      text: {
+        body: `🚕 *¡TU VIAJE HA COMENZADO!*\n\nTu trayecto oficial ha iniciado en IrGo. ¡Disfruta el viaje seguro con nosotros!`
+      }
+    };
+  }
+
   static mensajeSinConductores(): InteractiveMessage {
     return {
       type: 'interactive',

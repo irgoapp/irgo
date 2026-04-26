@@ -71,4 +71,26 @@ export class WhatsappNotificationService {
       console.error(`[WspNotif] ❌ Error notificando llegada:`, error.message);
     }
   }
+  /**
+   * Notifica al cliente que el viaje ha comenzado oficialmente.
+   */
+  async notificarViajeIniciado(viaje: Viaje): Promise<void> {
+    if (!viaje.cliente_id) return;
+
+    try {
+      const cliente = await this.clienteRepo.buscarPorId(viaje.cliente_id);
+      if (!cliente) return;
+
+      const mensaje = BotResponseBuilder.mensajeViajeIniciado();
+
+      await this.whatsappRepo.enviarMensaje({
+        telefono: cliente.telefono,
+        texto: mensaje
+      });
+
+      console.log(`[WspNotif] ✅ Notificación de INICIO DE VIAJE enviada a ${cliente.telefono}`);
+    } catch (error: any) {
+      console.error(`[WspNotif] ❌ Error notificando inicio de viaje:`, error.message);
+    }
+  }
 }
