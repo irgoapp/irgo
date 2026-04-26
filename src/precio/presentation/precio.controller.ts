@@ -14,11 +14,11 @@ export async function precioControllerPlugin(fastify: FastifyInstance, options: 
         throw new Error('Parametros invalidos');
       }
 
-      const precio = await calcularClientePrecioUseCase.execute({
+      const precios = await calcularClientePrecioUseCase.execute({
         distancia_ruta: body.distancia_ruta,
         tipo_vehiculo: body.tipo_vehiculo
       });
-      return reply.code(200).send(new PrecioResponseDto(precio, 'USD'));
+      return reply.code(200).send(new PrecioResponseDto(precios.monto_ruta, 'USD'));
     } catch (error: any) {
       return reply.code(400).send({ error: error.message });
     }

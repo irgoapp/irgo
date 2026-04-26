@@ -7,6 +7,7 @@ export interface SesionWhatsApp {
     destino?: string;
     solicitud_id?: string;
     notificado_espera?: boolean;
+    tipo_vehiculo?: string;
   };
   ultima_actividad?: string;
 }
