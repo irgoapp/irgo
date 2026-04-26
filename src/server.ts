@@ -31,16 +31,20 @@ fastify.register(authControllerPlugin, { prefix: '/auth' });
 fastify.register(clienteControllerPlugin, { prefix: '/cliente' });
 
 const start = async () => {
-  try {
-    const port = Number(process.env.PORT) || 8080;
-    const host = '0.0.0.0'; // <--- OBLIGATORIO para Railway/Render
+  // 1. Forzamos la lectura de la variable que inyecta Railway
+  const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
+  
+  // 2. Fastify DEBE escuchar en 0.0.0.0 para ser visible en la red de Railway
+  const ADDRESS = '0.0.0.0'; 
 
-    await fastify.listen({ port, host });
+  try {
+    await fastify.listen({ port: PORT, host: ADDRESS });
     
     // DESPUÉS montamos Socket.io sobre el servidor ya activo
     setupSocket(fastify.server);
     
-    console.log(`🚀 IRGO Backend listo en puerto ${port}`);
+    // CAMBIEN EL LOG PARA ESTAR SEGUROS:
+    console.log(`✅ IRGO ONLINE: Escuchando en el puerto real: ${PORT}`);
 
     // Manejo de señales de apagado (Graceful Shutdown)
     const shutdown = async () => {
