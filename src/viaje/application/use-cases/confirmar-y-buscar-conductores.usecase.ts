@@ -38,6 +38,8 @@ export class ConfirmarYBuscarConductoresUseCase {
     });
 
     viaje.monto_ruta = precios.monto_ruta; 
+    viaje.monto_conductor = precios.monto_conductor;
+    viaje.monto_comision = precios.monto_comision;
     
     // Guardamos la información monetaria fuerte en la Base de Datos
     await this.viajeRepository.actualizarEstado(viaje.id!, 'buscando');

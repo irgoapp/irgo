@@ -41,6 +41,8 @@ export class SolicitarViajeUseCase {
       destino_texto: dto.destino_texto,
       tipo_vehiculo: dto.tipo_vehiculo,
       monto_ruta: precios.monto_ruta,
+      monto_conductor: precios.monto_conductor,
+      monto_comision: precios.monto_comision,
       distancia_ruta: mapa.distancia_ruta,
       tiempo_ruta: mapa.tiempo_ruta,
       ruta: mapa.geojson,

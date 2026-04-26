@@ -8,6 +8,8 @@ export class Viaje {
   destino_texto?: string;
   tipo_vehiculo: string;
   monto_ruta?: number;
+  monto_conductor?: number;
+  monto_comision?: number;
   distancia_ruta?: number;
   tiempo_ruta?: number;
   estado: string;
@@ -31,6 +33,8 @@ export class Viaje {
     this.destino_texto = data.destino_texto;
     this.tipo_vehiculo = data.tipo_vehiculo!;
     this.monto_ruta = data.monto_ruta;
+    this.monto_conductor = data.monto_conductor;
+    this.monto_comision = data.monto_comision;
     this.distancia_ruta = data.distancia_ruta;
     this.tiempo_ruta = data.tiempo_ruta;
     this.estado = data.estado || 'solicitado';
