@@ -19,7 +19,7 @@ export class SupabaseAuthRepository implements IAuthRepository {
     const { data: qData, error: qError } = await supabaseClient
       .from('conductores')
       .select('nombre, telefono, vehiculo_placa, vehiculo_marca, vehiculo_modelo, vehiculo_color, tipo_vehiculo, calificacion, viajes_completados')
-      .eq('telefono', cleanedTelefono)
+      .eq('id', data.user?.id)
       .single();
 
     if (!qError && qData) {
