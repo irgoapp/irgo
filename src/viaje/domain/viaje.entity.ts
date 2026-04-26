@@ -22,6 +22,7 @@ export class Viaje {
   cancelado_at?: Date;
   ruta?: any[];
   ruta_recogida?: any[];
+  pin_verificacion?: string;
 
   constructor(data: Partial<Viaje>) {
     this.id = data.id;
@@ -47,5 +48,6 @@ export class Viaje {
     this.cancelado_at = data.cancelado_at ? new Date(data.cancelado_at) : undefined;
     this.ruta = data.ruta;
     this.ruta_recogida = data.ruta_recogida;
+    this.pin_verificacion = data.pin_verificacion;
   }
 }

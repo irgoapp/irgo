@@ -3,6 +3,7 @@ import { OfertaViajeConductorDto } from '../dto/out/oferta-viaje-conductor.dto';
 import { Viaje } from '../../domain/viaje.entity';
 import { IViajeRepository } from '../../domain/viaje.repository';
 import { emitirOfertaViaje } from '../../../shared/socket.handler';
+import { IClienteRepository } from '../../../cliente/domain/cliente.repository';
 
 // NOTA: Para respetar la frontera, usamos Interface pura, o inyectamos.
 import { IConductorRepository } from '../../../conductor/domain/conductor.repository';
@@ -14,7 +15,8 @@ export class SolicitarViajeUseCase {
     private viajeRepository: IViajeRepository,
     private conductorRepository: IConductorRepository,
     private consultarRutaMapa: ConsultarRutaMapaUseCase,
-    private calcPrecio: CalcularClientePrecioUseCase
+    private calcPrecio: CalcularClientePrecioUseCase,
+    private clienteRepository: IClienteRepository
   ) {}
 
   async execute(dto: SolicitarViajeDto): Promise<Viaje> {
@@ -31,6 +33,11 @@ export class SolicitarViajeUseCase {
       distancia_ruta: mapa.distancia_ruta,
       tipo_vehiculo: dto.tipo_vehiculo
     });
+    
+    // GENERACIÓN OFICIAL DEL PIN (Regla: 2 últimos dígitos del teléfono)
+    const cliente = await this.clienteRepository.buscarPorId(dto.cliente_id);
+    const telefono = cliente?.telefono || '';
+    const pin = telefono.replace(/\D/g, '').slice(-2).padStart(2, '0');
 
     // 2. Crear la entidad base del Viaje con datos reales
     const viaje = new Viaje({
@@ -46,7 +53,8 @@ export class SolicitarViajeUseCase {
       distancia_ruta: mapa.distancia_ruta,
       tiempo_ruta: mapa.tiempo_ruta,
       ruta: mapa.geojson,
-      estado: 'buscando'
+      estado: 'buscando',
+      pin_verificacion: pin
     });
 
     // 3. Insertarlo oficialmente en BD

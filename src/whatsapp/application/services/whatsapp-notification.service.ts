@@ -32,13 +32,10 @@ export class WhatsappNotificationService {
         return;
       }
 
-      // El PIN son los últimos 2 dígitos del teléfono del cliente (Regla de negocio IrGo)
-      const pin = cliente.telefono.replace(/\D/g, '').slice(-2).padStart(2, '0');
-
       const mensaje = BotResponseBuilder.mensajeConductorAsignado({
         conductor,
         etaMinutos: 5, // Valor base, podría calcularse dinámicamente en el futuro
-        pin
+        pin: viaje.pin_verificacion || '00'
       });
 
       await this.whatsappRepo.enviarMensaje({

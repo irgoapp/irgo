@@ -27,7 +27,7 @@ const viajeRepo = new SupabaseViajeRepository();
 const conductorRepo = new SupabaseConductorRepository();
 
 // El UseCase de Viaje (Solo crea el borrador sin alertar)
-const iniciarBorradorViaje = new IniciarBorradorViajeUseCase(viajeRepo);
+const iniciarBorradorViaje = new IniciarBorradorViajeUseCase(viajeRepo, clienteRepo);
 
 // Los sub-estados de WhatsApp
 const handleStart = new HandleStartUseCase(wpsRepo, clienteRepo);

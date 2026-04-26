@@ -38,7 +38,7 @@ const consultarRutaMapaUseCase = new ConsultarRutaMapaUseCase(mapaRepository);
 const calcularClientePrecioUseCase = new CalcularClientePrecioUseCase(precioRepository);
 const calcularComisionUseCase = new CalcularComisionUseCase(precioRepository);
 
-const solicitarViajeUseCase = new SolicitarViajeUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase, calcularClientePrecioUseCase);
+const solicitarViajeUseCase = new SolicitarViajeUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase, calcularClientePrecioUseCase, clienteRepository);
 const aceptarViajeUseCase = new AceptarViajeUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase, whatsappNotificationService);
 const cotizarViajeUseCase = new CotizarViajeUseCase(consultarRutaMapaUseCase, calcularClientePrecioUseCase);
 const confirmarViajeClienteUseCase = new ConfirmarViajeClienteUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase, calcularClientePrecioUseCase, calcularComisionUseCase);
