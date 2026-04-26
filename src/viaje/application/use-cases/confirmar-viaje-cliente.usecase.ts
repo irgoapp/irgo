@@ -113,7 +113,7 @@ export class ConfirmarViajeClienteUseCase {
         tiempoEstimado // Tiempo real calculado por MapsAPI (Origen->Destino)
       );
 
-      oferta.ruta = ruta; // Origen -> Destino
+      oferta.puntos_ruta = ruta; // Origen -> Destino
 
       emitirOfertaViaje(cond.id, oferta);
     }
