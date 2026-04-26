@@ -23,8 +23,8 @@ export class OfertaViajeConductorDto {
   destino_lng: number;
   destino_texto: string;
 
-  // Dibujo Polyline Cartográfica
-  ruta?: any[];
+  // Dibujo Polyline Cartográfica (Array de coordenadas)
+  puntos_ruta?: any[];
 
   // Datos de confianza del cliente
   cliente_nombre_corto: string;
@@ -34,7 +34,8 @@ export class OfertaViajeConductorDto {
     viaje: Viaje,
     gananciaPura: number,
     distanciaRutaOrigenADestino: number,
-    tiempoRutaOrigenADestino: number
+    tiempoRutaOrigenADestino: number,
+    puntos_ruta?: any[]
   ) {
     this.viaje_id = viaje.id!;
 
@@ -44,6 +45,9 @@ export class OfertaViajeConductorDto {
     // Distancias y Tiempos
     this.distancia_ruta = distanciaRutaOrigenADestino;
     this.tiempo_ruta = tiempoRutaOrigenADestino;
+
+    // Ruta
+    this.puntos_ruta = puntos_ruta;
 
     // Ubicaciones
     this.origen_lat = viaje.origen.lat;

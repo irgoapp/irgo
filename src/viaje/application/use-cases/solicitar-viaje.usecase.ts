@@ -65,7 +65,7 @@ export class SolicitarViajeUseCase {
       );
 
       // Inyectamos la polyline para el mapa del conductor
-      ofertaDto.ruta = viajeGuardado.ruta;
+      ofertaDto.puntos_ruta = viajeGuardado.ruta;
 
       emitirOfertaViaje(conductor.id, ofertaDto);
     }

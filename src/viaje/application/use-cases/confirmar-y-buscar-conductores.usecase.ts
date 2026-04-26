@@ -58,8 +58,8 @@ export class ConfirmarYBuscarConductoresUseCase {
         mapa.tiempo_ruta || 10 // Tiempo extraído del motor Mapas
       );
 
-      // Mutamos temporalmente en RAM el objeto interno para empujarle la manguera de puntos topográficos de MapLibre
-      ofertaDto.ruta = mapa.geojson;
+      // Inyectamos la polyline para el mapa del conductor
+      ofertaDto.puntos_ruta = mapa.geojson;
 
       emitirOfertaViaje(conductor.id, ofertaDto);
     }
