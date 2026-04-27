@@ -1,0 +1,182 @@
+# Reconstrucción del Módulo WhatsApp — IrGo Backend
+
+Reconstrucción completa del módulo `src/whatsapp/` siguiendo la instrucción estructural del usuario. Se elimina el código viejo y se reemplaza por una arquitectura limpia con dos ramas claras (Creación vs Viaje Activo), estados en español, y un túnel de chat conductor↔cliente.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Tabla `viaje_mensajes`**: Necesito que confirmes las columnas exactas que deseas o si debo crearla con esta estructura:
+> - `id` (UUID, PK)
+> - `solicitud_id` (UUID, FK → solicitudes)
+> - `emisor_tipo` (VARCHAR: 'cliente', 'conductor', 'sistema')
+> - `contenido` (TEXT)
+> - `created_at` (TIMESTAMPTZ)
+
+> [!WARNING]
+> **Purga Total**: Se borrarán estos archivos del módulo viejo:
+> - `bot-machine.usecase.ts` (se reescribe desde cero)
+> - `handle-interaccion.usecase.ts` (responsabilidades divididas en handlers nuevos)
+> - `handle-start.usecase.ts` (se reescribe con estados en español)
+> - `handle-location.usecase.ts` (se reescribe sin cruzar dominios)
+> - `handle-confirmation.usecase.ts` (se reescribe sin duplicar cancelación)
+> - `whatsapp-notification.service.ts` (se reescribe sin importar repos de otros dominios)
+>
+> **Se conservan intactos** (funcionan bien y cumplen `agent.md`):
+> - `whatsapp.entity.ts` ✅
+> - `whatsapp.repository.ts` ✅
+> - `whatsapp-meta.client.ts` ✅
+> - `supabase-wsp-session.repository.ts` ✅
+> - `bot-response.builder.ts` (se actualizan los textos, no se borra)
+> - `procesar-webhook.dto.ts` ✅
+> - `whatsapp-response.dto.ts` ✅
+
+## Open Questions
+
+> [!IMPORTANT]
+> 1. **Tabla `viaje_mensajes`**: ¿Ya existe en Supabase o debo incluir el SQL de creación en la migración?
+> 2. **Tabla `sesiones_whatsapp`**: Confirmar que las columnas actuales son `telefono`, `estado`, `contexto` (JSONB), `ultima_actividad`. ¿Hay alguna columna adicional?
+> 3. **Evento WebSocket para chat**: ¿El conductor recibirá los mensajes del cliente vía Socket.io con el evento `mensaje_chat` o prefieres otro nombre?
+
+---
+
+## Proposed Changes
+
+### Fase 1: Migración de Base de Datos
+
+#### [NEW] [11_whatsapp_rebuild.sql](file:///c:/Users/i_sso/.gemini/antigravity/scratch/taxi-libre-platform/irgo-backend/supabase/migrations/11_whatsapp_rebuild.sql)
+- Crear tabla `viaje_mensajes` con columnas: `id`, `solicitud_id`, `emisor_tipo`, `contenido`, `created_at`.
+- Migrar estados existentes en `sesiones_whatsapp` de inglés a español:
+  - `START` → `INICIO`
+  - `AWAITING_LOCATION` → `ESPERANDO_UBICACION`
+  - `SEARCHING_DRIVER` → (se elimina, ahora se lee de `solicitudes.estado`)
+
+---
+
+### Fase 2: Domain — Fuente de Verdad
+
+#### [MODIFY] [wsp-session.entity.ts](file:///c:/Users/i_sso/.gemini/antigravity/scratch/taxi-libre-platform/irgo-backend/src/whatsapp/domain/wsp-session.entity.ts)
+- Actualizar la interfaz `SesionWhatsApp` con los estados en español.
+- Agregar constantes de estados: `INICIO`, `ESPERANDO_UBICACION`, `ESPERANDO_DESTINO`, `CONFIRMANDO_VIAJE`.
+
+#### [NEW] [viaje-mensajes.entity.ts](file:///c:/Users/i_sso/.gemini/antigravity/scratch/taxi-libre-platform/irgo-backend/src/whatsapp/domain/viaje-mensajes.entity.ts)
+- Entidad para el túnel de chat: `id`, `solicitud_id`, `emisor_tipo`, `contenido`, `created_at`.
+
+#### [NEW] [viaje-mensajes.repository.ts](file:///c:/Users/i_sso/.gemini/antigravity/scratch/taxi-libre-platform/irgo-backend/src/whatsapp/domain/viaje-mensajes.repository.ts)
+- Interfaz: `guardarMensaje()`, `obtenerMensajes(solicitud_id)`.
+
+---
+
+### Fase 3: Infrastructure — Acceso a Datos
+
+#### [NEW] [supabase-viaje-mensajes.repository.ts](file:///c:/Users/i_sso/.gemini/antigravity/scratch/taxi-libre-platform/irgo-backend/src/whatsapp/infrastructure/supabase-viaje-mensajes.repository.ts)
+- Implementación Supabase de `IViajeMensajesRepository`.
+- INSERT en `viaje_mensajes`, SELECT por `solicitud_id`.
+
+---
+
+### Fase 4: Application — Use Cases (Purga y Reconstrucción)
+
+#### [DELETE] handle-interaccion.usecase.ts
+Responsabilidades mezcladas. Se reemplaza por handlers específicos.
+
+#### [REWRITE] [bot-machine.usecase.ts](file:///c:/Users/i_sso/.gemini/antigravity/scratch/taxi-libre-platform/irgo-backend/src/whatsapp/application/use-cases/bot-machine.usecase.ts)
+**El nuevo cerebro con dos ramas:**
+```
+execute(telefono, mensaje):
+  1. Buscar cliente por teléfono → cliente_id
+  2. Buscar viaje activo en solicitudes (estado NOT IN completado, cancelado)
+  3. IF viaje activo → RAMA 2 (HandleViajeActivo)
+  4. ELSE → RAMA 1 (Flujo de Creación por estados de wsp_sessions)
+```
+
+#### [REWRITE] [handle-start.usecase.ts](file:///c:/Users/i_sso/.gemini/antigravity/scratch/taxi-libre-platform/irgo-backend/src/whatsapp/application/use-cases/estados/handle-start.usecase.ts)
+- Envía bienvenida con botones Moto/Auto/Delivery.
+- Actualiza sesión a `ESPERANDO_UBICACION` con el tipo seleccionado.
+
+#### [REWRITE] [handle-location.usecase.ts](file:///c:/Users/i_sso/.gemini/antigravity/scratch/taxi-libre-platform/irgo-backend/src/whatsapp/application/use-cases/estados/handle-location.usecase.ts)
+- Recibe GPS, crea borrador de viaje.
+- Envía link del mapa para elegir destino.
+- Actualiza sesión a `ESPERANDO_DESTINO`.
+
+#### [REWRITE] [handle-confirmation.usecase.ts](file:///c:/Users/i_sso/.gemini/antigravity/scratch/taxi-libre-platform/irgo-backend/src/whatsapp/application/use-cases/estados/handle-confirmation.usecase.ts)
+- Procesa "confirmar_si" → envía "Buscando conductor" y limpia sesión (la verdad pasa a `solicitudes`).
+- Procesa "confirmar_no" → envía cancelación y limpia sesión a `INICIO`.
+
+#### [NEW] [handle-viaje-activo.usecase.ts](file:///c:/Users/i_sso/.gemini/antigravity/scratch/taxi-libre-platform/irgo-backend/src/whatsapp/application/use-cases/estados/handle-viaje-activo.usecase.ts)
+**Rama 2 — Lee el estado directamente de `solicitudes`:**
+```
+execute(viaje, telefono, mensaje):
+  switch(viaje.estado):
+    'buscando':  → "Buscando conductor... [Cancelar]"
+    'asignado':  → "Conductor en camino. [1. Hablar] [2. Cancelar]"
+    'llegado':   → "Conductor esperando. [1. Hablar] [2. Cancelar]"
+    'en_curso':  → "Viaje en curso. [Emergencia]"
+```
+
+#### [NEW] [handle-chat-cliente.usecase.ts](file:///c:/Users/i_sso/.gemini/antigravity/scratch/taxi-libre-platform/irgo-backend/src/whatsapp/application/use-cases/estados/handle-chat-cliente.usecase.ts)
+**Túnel de Chat:**
+- Guarda mensaje del cliente en `viaje_mensajes` con `emisor_tipo = 'cliente'`.
+- Emite evento WebSocket `mensaje_chat` a la sala del conductor.
+
+#### [REWRITE] [whatsapp-notification.service.ts](file:///c:/Users/i_sso/.gemini/antigravity/scratch\taxi-libre-platform/irgo-backend/src/whatsapp/application/services/whatsapp-notification.service.ts)
+- **Eliminar imports cruzados** de `IConductorRepository` e `IClienteRepository`.
+- Recibir los datos ya procesados (nombre, placa, etc.) como parámetros simples.
+- Agregar método `notificarMensajeConductor()` para el túnel de chat inverso (conductor → cliente vía WhatsApp).
+
+#### [MODIFY] [bot-response.builder.ts](file:///c:/Users/i_sso/.gemini/antigravity/scratch/taxi-libre-platform/irgo-backend/src/whatsapp/domain/bot-response.builder.ts)
+- Agregar nuevos mensajes para Rama 2:
+  - `mensajeEstadoBuscando()` → con botón [Cancelar]
+  - `mensajeEstadoAsignado(conductor)` → con botones [Hablar] [Cancelar]
+  - `mensajeEstadoLlegado(conductor)` → con botones [Hablar] [Cancelar]
+  - `mensajeEstadoEnCurso()` → con botón [Emergencia]
+  - `mensajeChatRecibido(texto)` → para reenviar mensajes del conductor
+
+---
+
+### Fase 5: Presentation — Controller
+
+#### [REWRITE] [whatsapp.controller.ts](file:///c:/Users/i_sso/.gemini/antigravity/scratch/taxi-libre-platform/irgo-backend/src/whatsapp/presentation/whatsapp.controller.ts)
+- Recablear todas las dependencias al nuevo árbol de Use Cases.
+- Agregar endpoint `POST /webhook/chat` para recibir mensajes del conductor (APK) hacia el cliente.
+- Mantener `GET /webhook` y `POST /webhook` para Meta.
+
+---
+
+## Diagrama de Flujo Final
+
+```mermaid
+flowchart TD
+    A[Mensaje de WhatsApp] --> B{¿Cliente tiene viaje activo en solicitudes?}
+    
+    B -- NO --> C[RAMA 1: Flujo de Creación]
+    C --> C1[INICIO → Bienvenida]
+    C1 --> C2[ESPERANDO_UBICACION → GPS]
+    C2 --> C3[ESPERANDO_DESTINO → Link Mapa]
+    C3 --> C4[CONFIRMANDO_VIAJE → Confirmar]
+    C4 --> C5[Crear solicitud → Bot se calla]
+    
+    B -- SÍ --> D[RAMA 2: Viaje Activo]
+    D --> D1{solicitudes.estado}
+    D1 -- buscando --> D2["Buscando conductor... (Cancelar)"]
+    D1 -- asignado --> D3["Conductor en camino (Hablar / Cancelar)"]
+    D1 -- llegado --> D4["Conductor esperando (Hablar / Cancelar)"]
+    D1 -- en_curso --> D5["Viaje en curso (Emergencia)"]
+    
+    D3 -- Hablar --> E[Túnel de Chat]
+    D4 -- Hablar --> E
+    E --> E1[INSERT viaje_mensajes]
+    E1 --> E2[WebSocket → Conductor APK]
+```
+
+---
+
+## Verification Plan
+
+### Automated Tests
+1. `npm run build` — Verificar que TypeScript compile sin errores.
+2. `git push` → Railway debe desplegar sin errores.
+
+### Manual Verification
+1. **Rama 1**: Enviar "Hola" por WhatsApp → Recibir bienvenida → Enviar GPS → Recibir link → Confirmar → Verificar que `solicitudes` tenga el registro.
+2. **Rama 2**: Con un viaje activo en `asignado`, enviar un mensaje → Verificar que el conductor lo reciba vía WebSocket.
+3. **Logs de Railway**: Verificar que no haya errores de "column not found" ni "RPC not found".

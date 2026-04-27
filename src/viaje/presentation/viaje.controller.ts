@@ -25,6 +25,8 @@ import { WhatsappNotificationService } from '../../whatsapp/application/services
 import { SupabaseMovimientoRepository } from '../../movimiento/infrastructure/supabase-movimiento.repository';
 import { MovimientoService } from '../../movimiento/application/services/movimiento.service';
 import { emitTripUpdate } from '../../shared/socket.handler';
+import { SupabaseViajeMensajesRepository } from '../../whatsapp/infrastructure/supabase-viaje-mensajes.repository';
+import { ViajeMensaje } from '../../whatsapp/domain/viaje-mensajes.entity';
 
 // Repositorios e inyección cruzada por dependencias
 const viajeRepository = new SupabaseViajeRepository();
@@ -33,6 +35,7 @@ const mapaRepository = new MapaApiClient();
 const precioRepository = new SupabasePrecioRepository();
 const clienteRepository = new SupabaseClienteRepository();
 const whatsappRepository = new WhatsappMetaClient();
+const viajeMensajesRepo = new SupabaseViajeMensajesRepository();
 
 // Casos de Uso y Servicios
 const movimientoRepository = new SupabaseMovimientoRepository();
@@ -212,6 +215,42 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
       });
       return reply.code(200).send({ ok: exito });
     } catch (error: any) {
+      return reply.code(400).send({ error: error.message });
+    }
+  });
+
+  // ═══════════════════════════════════════════════
+  // CHAT: Conductor → Cliente (vía WhatsApp)
+  // ═══════════════════════════════════════════════
+  fastify.post('/:id/chat', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+    try {
+      const { contenido } = request.body as any;
+      if (!contenido || !contenido.trim()) {
+        return reply.code(400).send({ error: 'El mensaje no puede estar vacío' });
+      }
+
+      const viaje = await viajeRepository.buscarPorId(request.params.id);
+      if (!viaje) return reply.code(404).send({ error: 'Viaje no encontrado' });
+      if (!viaje.conductor_id) return reply.code(400).send({ error: 'Viaje sin conductor asignado' });
+
+      // 1. Guardar mensaje en viaje_mensajes
+      const mensaje = new ViajeMensaje({
+        viaje_id: request.params.id,
+        emisor_tipo: 'conductor',
+        contenido: contenido.trim()
+      });
+      await viajeMensajesRepo.guardarMensaje(mensaje);
+
+      // 2. Buscar teléfono del cliente para reenviar por WhatsApp
+      const cliente = await clienteRepository.buscarPorId(viaje.cliente_id);
+      if (cliente?.telefono) {
+        await whatsappNotificationService.notificarMensajeConductor(cliente.telefono, contenido.trim());
+      }
+
+      console.log(`[ViajeChat] 💬 Mensaje del conductor guardado y reenviado para viaje ${request.params.id}`);
+      return reply.code(200).send({ ok: true });
+    } catch (error: any) {
+      console.error(`[ViajeChat] ❌ Error:`, error.message);
       return reply.code(400).send({ error: error.message });
     }
   });
