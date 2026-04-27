@@ -67,6 +67,7 @@ export class AceptarViajeUseCase {
 
     viaje.estado = 'asignado';
     viaje.conductor_id = dto.conductor_id;
+    viaje.ruta_recogida = rutaRecogida;
     return viaje;
   }
 }
