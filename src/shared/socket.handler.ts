@@ -49,6 +49,44 @@ export function setupSocket(server: any) {
          }
       });
 
+      // --- CHAT ULTRA RÁPIDO (Conductor -> Cliente) ---
+      socket.on('chat:enviar_mensaje', async (payload: { viaje_id: string; contenido: string }) => {
+        try {
+          // Importación dinámica para evitar dependencias circulares pesadas
+          const { SupabaseViajeRepository } = await import('../viaje/infrastructure/supabase-viaje.repository');
+          const { SupabaseClienteRepository } = await import('../cliente/infrastructure/supabase-cliente.repository');
+          const { SupabaseViajeMensajesRepository } = await import('../whatsapp/infrastructure/supabase-viaje-mensajes.repository');
+          const { ViajeMensaje } = await import('../whatsapp/domain/viaje-mensajes.entity');
+          const { WhatsappMetaClient } = await import('../whatsapp/infrastructure/whatsapp-meta.client');
+          const { WhatsappNotificationService } = await import('../whatsapp/application/services/whatsapp-notification.service');
+
+          const vRepo = new SupabaseViajeRepository();
+          const cRepo = new SupabaseClienteRepository();
+          const mRepo = new SupabaseViajeMensajesRepository();
+          const wNotif = new WhatsappNotificationService(new WhatsappMetaClient());
+
+          const viaje = await vRepo.buscarPorId(payload.viaje_id);
+          if (viaje && viaje.conductor_id === conductorId) {
+            // 1. Guardar en DB
+            const mensaje = new ViajeMensaje({
+              viaje_id: payload.viaje_id,
+              emisor_tipo: 'conductor',
+              contenido: payload.contenido.trim()
+            });
+            await mRepo.guardarMensaje(mensaje);
+
+            // 2. Enviar a WhatsApp
+            const cliente = await cRepo.buscarPorId(viaje.cliente_id);
+            if (cliente?.telefono) {
+              await wNotif.notificarMensajeConductor(cliente.telefono, payload.contenido.trim());
+            }
+            console.log(`[Sockets] 💬 Mensaje de conductor ${conductorId} enviado vía Socket`);
+          }
+        } catch (err) {
+          console.error(`[Sockets] Error procesando chat:enviar_mensaje:`, err);
+        }
+      });
+
       socket.on('disconnect', async () => {
         console.log(`[Sockets] ⚠️ Desconexión detectada del Conductor: ${conductorId}`);
         const timer = setTimeout(async () => {
