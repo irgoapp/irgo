@@ -24,7 +24,7 @@ fastify.get('/', async () => {
 
 // Registrar dominios verticalizados
 fastify.register(conductorControllerPlugin, { prefix: '/api/conductor' });
-fastify.register(viajeControllerPlugin, { prefix: '/viaje' }); // Se mantiene sin /api por petición del usuario
+fastify.register(viajeControllerPlugin, { prefix: '/api/viaje' });
 fastify.register(precioControllerPlugin, { prefix: '/api/precio' });
 fastify.register(mapaControllerPlugin, { prefix: '/api/mapa' });
 fastify.register(whatsappControllerPlugin, { prefix: '/api/whatsapp' });
