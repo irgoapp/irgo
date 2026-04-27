@@ -32,8 +32,7 @@ export class SupabaseMovimientoRepository implements IMovimientoRepository {
     const { error } = await supabaseClient
       .from('conductor_saldo')
       .update({ 
-        saldo: nuevoSaldo, 
-        actualizado_en: new Date().toISOString() 
+        saldo: nuevoSaldo
       })
       .eq('conductor_id', conductorId);
 
