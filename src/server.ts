@@ -22,15 +22,22 @@ fastify.get('/', async () => {
   return { status: 'ok', message: 'IRGO Backend Is Live' };
 });
 
-// Registrar dominios verticalizados
+// Registrar dominios (Soporte Dual para App y Dashboard)
+fastify.register(conductorControllerPlugin, { prefix: '/conductor' });
 fastify.register(conductorControllerPlugin, { prefix: '/api/conductor' });
+
+fastify.register(viajeControllerPlugin, { prefix: '/viaje' });
 fastify.register(viajeControllerPlugin, { prefix: '/api/viaje' });
-fastify.register(precioControllerPlugin, { prefix: '/api/precio' });
-fastify.register(mapaControllerPlugin, { prefix: '/api/mapa' });
-fastify.register(whatsappControllerPlugin, { prefix: '/whatsapp' });
+
+fastify.register(authControllerPlugin, { prefix: '/auth' });
 fastify.register(authControllerPlugin, { prefix: '/api/auth' });
-fastify.register(clienteControllerPlugin, { prefix: '/api/cliente' });
+
+// Módulos específicos
 fastify.register(movimientoControllerPlugin, { prefix: '/api/movimiento' });
+fastify.register(precioControllerPlugin, { prefix: '/precio' });
+fastify.register(mapaControllerPlugin, { prefix: '/mapa' });
+fastify.register(whatsappControllerPlugin, { prefix: '/whatsapp' });
+fastify.register(clienteControllerPlugin, { prefix: '/cliente' });
 
 const start = async () => {
   // 1. Forzamos la lectura de la variable que inyecta Railway
