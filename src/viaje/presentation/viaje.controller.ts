@@ -255,4 +255,34 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
     }
   });
 
+  // RUTA GENÉRICA (Para evitar 404 si la APK no manda ID en la URL)
+  fastify.post('/chat', async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { viaje_id, contenido } = request.body as any;
+      if (!viaje_id || !contenido) {
+        return reply.code(400).send({ error: 'viaje_id y contenido son obligatorios' });
+      }
+
+      const viaje = await viajeRepository.buscarPorId(viaje_id);
+      if (!viaje) return reply.code(404).send({ error: 'Viaje no encontrado' });
+
+      const mensaje = new ViajeMensaje({
+        viaje_id,
+        emisor_tipo: 'conductor',
+        contenido: contenido.trim()
+      });
+      await viajeMensajesRepo.guardarMensaje(mensaje);
+
+      const cliente = await clienteRepository.buscarPorId(viaje.cliente_id);
+      if (cliente?.telefono) {
+        await whatsappNotificationService.notificarMensajeConductor(cliente.telefono, contenido.trim());
+      }
+
+      return reply.code(200).send({ ok: true });
+    } catch (error: any) {
+      return reply.code(400).send({ error: error.message });
+    }
+  });
+
 }
+
