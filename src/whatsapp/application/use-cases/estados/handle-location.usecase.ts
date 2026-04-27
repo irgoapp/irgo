@@ -1,6 +1,7 @@
 import { IWhatsappRepository } from '../../../domain/whatsapp.repository';
 import { ISessionRepository, SesionWhatsApp, ESTADOS_SESION } from '../../../domain/wsp-session.entity';
 import { BotResponseBuilder } from '../../../domain/bot-response.builder';
+import { IniciarViajeInDto } from '../../../../viaje/application/dto/in/iniciar-viaje.in.dto';
 
 /**
  * HandleLocationUseCase
@@ -18,11 +19,14 @@ export class HandleLocationUseCase {
     try {
       const tipoVehiculo = session.contexto?.tipo_vehiculo || 'moto';
 
-      const viajeOut = await this.iniciarBorradorViaje.execute({
-        cliente_id: '', // Se resuelve internamente por el UseCase de viaje
+      const dto = new IniciarViajeInDto({
+        cliente_id: '',
         origen: { lat, lng },
         tipo_vehiculo: tipoVehiculo
       });
+
+      const viajeOut = await this.iniciarBorradorViaje.execute(dto);
+
 
       const baseUrl = process.env.NEXT_PUBLIC_CLIENT_URL || 'https://taxlibre-cliente.pages.dev';
       const link = `${baseUrl}/viaje/${viajeOut.viaje_id}`;
