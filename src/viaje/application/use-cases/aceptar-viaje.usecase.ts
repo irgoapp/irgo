@@ -6,6 +6,7 @@ import { ConsultarRutaMapaUseCase } from '../../../mapa/application/use-cases/co
 import { emitirViajeTomado } from '../../../shared/socket.handler';
 import { MovimientoService } from '../../../movimiento/application/services/movimiento.service';
 import { WhatsappNotificationService } from '../../../whatsapp/application/services/whatsapp-notification.service';
+import { supabaseClient } from '../../../shared/supabase.client';
 
 export class AceptarViajeUseCase {
   constructor(
