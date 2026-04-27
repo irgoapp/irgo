@@ -23,14 +23,14 @@ fastify.get('/', async () => {
 });
 
 // Registrar dominios verticalizados
-fastify.register(conductorControllerPlugin, { prefix: '/conductor' });
-fastify.register(viajeControllerPlugin, { prefix: '/viaje' });
-fastify.register(precioControllerPlugin, { prefix: '/precio' });
-fastify.register(mapaControllerPlugin, { prefix: '/mapa' });
-fastify.register(whatsappControllerPlugin, { prefix: '/whatsapp' });
-fastify.register(authControllerPlugin, { prefix: '/auth' });
-fastify.register(clienteControllerPlugin, { prefix: '/cliente' });
-fastify.register(movimientoControllerPlugin, { prefix: '/movimiento' });
+fastify.register(conductorControllerPlugin, { prefix: '/api/conductor' });
+fastify.register(viajeControllerPlugin, { prefix: '/viaje' }); // Se mantiene sin /api por petición del usuario
+fastify.register(precioControllerPlugin, { prefix: '/api/precio' });
+fastify.register(mapaControllerPlugin, { prefix: '/api/mapa' });
+fastify.register(whatsappControllerPlugin, { prefix: '/api/whatsapp' });
+fastify.register(authControllerPlugin, { prefix: '/api/auth' });
+fastify.register(clienteControllerPlugin, { prefix: '/api/cliente' });
+fastify.register(movimientoControllerPlugin, { prefix: '/api/movimiento' });
 
 const start = async () => {
   // 1. Forzamos la lectura de la variable que inyecta Railway

@@ -85,6 +85,7 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
 
       return reply.code(200).send(new ViajeResponseDto(viaje));
     } catch (error: any) {
+      console.error(`[ViajeController] ❌ ERROR AL ACEPTAR VIAJE ${request.params.id}:`, error.message);
       return reply.code(400).send({ error: error.message });
     }
   });
