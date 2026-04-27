@@ -22,59 +22,51 @@ export class AceptarViajeUseCase {
     const viaje = await this.viajeRepository.buscarPorId(dto.viaje_id);
     if (!viaje) throw new Error('Viaje no encontrado');
     
-    // Un viaje solo puede ser aceptado si está en estado 'buscando'
-    if (viaje.estado !== 'buscando') {
-      throw new Error('EL_VIAJE_YA_NO_ESTA_DISPONIBLE');
-    }
-
-    // 0. COBRO DE COMISIÓN (Bloqueo preventivo de saldo)
-    // Extraemos el monto directamente del viaje (ya calculado previamente)
-    const montoComision = viaje.monto_comision || 0;
-    await this.movimientoService.procesarCobroComision(dto.conductor_id, viaje.id!, montoComision);
-
     // 1. Obtener ubicación del conductor que aceptó
     const conductor = await this.conductorRepository.buscarPorId(dto.conductor_id);
-    
-    // LOG CRÍTICO para depurar en Railway
-    console.log("DATOS CONDUCTOR:", JSON.stringify(conductor, null, 2));
+    let rutaRecogida: any[] = [];
 
     if (conductor && conductor.ubicacion_actual && conductor.ubicacion_actual.lat) {
       try {
         console.log(`[AceptarViaje] Calculando ruta_recogida desde (${conductor.ubicacion_actual.lat}, ${conductor.ubicacion_actual.lng}) hasta origen cliente`);
-        
-        // 2. Calcular Ruta Recogida (Conductor -> Origen)
         const mapaRecogida = await this.consultarRutaMapa.execute({
           origen: conductor.ubicacion_actual,
           destino: viaje.origen
         });
-        
-        // 3. Aplanar GeoJSON
         if (mapaRecogida.geojson?.features) {
-          viaje.ruta_recogida = mapaRecogida.geojson.features.flatMap((f: any) => f.geometry.coordinates);
-          console.log(`[AceptarViaje] ✅ ruta_recogida calculada y aplanada: ${viaje.ruta_recogida?.length || 0} puntos`);
-        } else {
-          console.warn(`[AceptarViaje] ⚠️ Maps-API devolvió ruta pero sin coordenadas válidas.`);
+          rutaRecogida = mapaRecogida.geojson.features.flatMap((f: any) => f.geometry.coordinates);
         }
       } catch (e) {
         console.error(`[AceptarViaje] ❌ Error calculando ruta recogida:`, e);
       }
-    } else {
-      console.warn(`[AceptarViaje] ⚠️ No se pudo calcular ruta_recogida: El conductor no tiene GPS activo.`);
     }
+
+    // 2. ASIGNACIÓN ATÓMICA (Intentar ganar el viaje)
+    // Solo se asignará si el estado sigue siendo 'buscando' (bloqueo en base de datos)
+    const exitoAsignacion = await this.viajeRepository.asignarConductor(viaje.id!, dto.conductor_id, rutaRecogida);
+
+    if (!exitoAsignacion) {
+      throw new Error('EL_VIAJE_YA_NO_ESTA_DISPONIBLE');
+    }
+
+    // 2. COBRO DE COMISIÓN (Solo si ya ganamos el viaje)
+    try {
+      const montoComision = viaje.monto_comision || 0;
+      await this.movimientoService.procesarCobroComision(dto.conductor_id, viaje.id!, montoComision);
+    } catch (error: any) {
+      // Si falla el cobro (ej: se quedó sin saldo en ese instante), 
+      // opcionalmente podríamos revertir la asignación, pero por ahora lo dejamos asignado 
+      // y lanzamos el error para que el driver sepa que debe recargar.
+      console.error(`[AceptarViaje] Error en cobro tras asignación: ${error.message}`);
+      throw error;
+    }
+
+    // 3. Notificaciones
+    emitirViajeTomado(viaje.id!);
+    this.whatsappNotification.notificarConductorAsignado(viaje);
 
     viaje.estado = 'asignado';
     viaje.conductor_id = dto.conductor_id;
-    viaje.asignado_at = new Date();
-
-    // Actualizamos el viaje con el nuevo conductor y la ruta de recogida calculada (Usando bloqueo atómico)
-    await this.viajeRepository.asignarConductor(viaje.id!, dto.conductor_id, viaje.ruta_recogida || []);
-    
-    // 📢 LIMPIEZA DE EVENTOS: Notificar que el viaje ya fue tomado
-    emitirViajeTomado(viaje.id!);
-
-    // 📱 WHATSAPP: Notificar al cliente que ya tiene conductor
-    this.whatsappNotification.notificarConductorAsignado(viaje);
-
     return viaje;
   }
 }
