@@ -1,3 +1,5 @@
+import { IViajeRepository } from '../../domain/viaje.repository';
+import { emitirViajeCancelado } from '../../../shared/socket.handler';
 import { MovimientoService } from '../../../movimiento/application/services/movimiento.service';
 
 export class CancelarViajeUseCase {

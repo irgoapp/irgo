@@ -5,6 +5,7 @@ import { IConductorRepository } from '../../../conductor/domain/conductor.reposi
 import { ConsultarRutaMapaUseCase } from '../../../mapa/application/use-cases/consultar-ruta-mapa.usecase';
 import { emitirViajeTomado } from '../../../shared/socket.handler';
 import { MovimientoService } from '../../../movimiento/application/services/movimiento.service';
+import { WhatsappNotificationService } from '../../../whatsapp/application/services/whatsapp-notification.service';
 
 export class AceptarViajeUseCase {
   constructor(
