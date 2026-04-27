@@ -1,3 +1,14 @@
+/**
+ * Estados del flujo de CREACIÓN de viaje (Rama 1).
+ * Solo se usan mientras el cliente NO tiene un viaje activo en solicitudes.
+ */
+export const ESTADOS_SESION = {
+  INICIO: 'INICIO',
+  ESPERANDO_UBICACION: 'ESPERANDO_UBICACION',
+  ESPERANDO_DESTINO: 'ESPERANDO_DESTINO',
+  CONFIRMANDO_VIAJE: 'CONFIRMANDO_VIAJE',
+} as const;
+
 export interface SesionWhatsApp {
   telefono: string;
   estado: string;

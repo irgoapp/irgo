@@ -21,8 +21,7 @@ export class MarcarLlegadaUseCase {
 
     await this.viajeRepository.actualizarEstado(viajeId, 'llegado');
 
-    // 📱 WHATSAPP: Notificar al cliente que el conductor llegó
-    this.whatsappNotification.notificarConductorLlegado(viaje);
+    // WhatsApp notification handled by bot RAMA 2 (estado = 'llegado')
 
     return viaje;
   }

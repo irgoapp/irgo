@@ -153,3 +153,14 @@ export function emitirViajeExpirado(viajeId: string) {
     console.log(`[Sockets] 📢 Evento viaje_expirado enviado para viaje ${viajeId}`);
   }
 }
+
+/**
+ * Túnel de Chat: Envía un mensaje del cliente al conductor vía WebSocket.
+ * Evento: chat:nuevo_mensaje
+ */
+export function emitirMensajeChat(conductorId: string, data: any) {
+  if (ioInstance) {
+    ioInstance.to(`conductor_${conductorId}`).emit('chat:nuevo_mensaje', data);
+    console.log(`[Sockets] 💬 chat:nuevo_mensaje emitido a conductor ${conductorId}`);
+  }
+}

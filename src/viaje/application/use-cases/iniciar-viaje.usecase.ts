@@ -22,8 +22,7 @@ export class IniciarViajeUseCase {
     
     await this.viajeRepository.actualizar(viaje);
 
-    // Notificación automática al cliente
-    await this.whatsappNotificationService.notificarViajeIniciado(viaje);
+    // WhatsApp notification handled by bot RAMA 2 (estado = 'en_curso')
 
     return viaje;
   }

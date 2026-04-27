@@ -38,7 +38,7 @@ const whatsappRepository = new WhatsappMetaClient();
 const movimientoRepository = new SupabaseMovimientoRepository();
 const movimientoService = new MovimientoService(movimientoRepository);
 
-const whatsappNotificationService = new WhatsappNotificationService(whatsappRepository, conductorRepository, clienteRepository);
+const whatsappNotificationService = new WhatsappNotificationService(whatsappRepository);
 
 const consultarRutaMapaUseCase = new ConsultarRutaMapaUseCase(mapaRepository);
 const calcularClientePrecioUseCase = new CalcularClientePrecioUseCase(precioRepository);

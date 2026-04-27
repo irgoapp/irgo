@@ -1,49 +1,38 @@
 import { IWhatsappRepository } from '../../domain/whatsapp.repository';
 import { BotResponseBuilder } from '../../domain/bot-response.builder';
-import { Viaje } from '../../../viaje/domain/viaje.entity';
-import { IConductorRepository } from '../../../conductor/domain/conductor.repository';
-import { IClienteRepository } from '../../../cliente/domain/cliente.repository';
 
 /**
  * WhatsappNotificationService
- * Se encarga de enviar mensajes proactivos al cliente basados en eventos del viaje.
+ * Envía mensajes proactivos al cliente basados en eventos del viaje.
+ * NO importa repositorios de otros dominios. Recibe datos ya procesados.
  */
 export class WhatsappNotificationService {
   constructor(
-    private whatsappRepo: IWhatsappRepository,
-    private conductorRepo: IConductorRepository,
-    private clienteRepo: IClienteRepository
+    private whatsappRepo: IWhatsappRepository
   ) {}
 
   /**
    * Notifica al cliente que un conductor ha aceptado el viaje.
    */
-  async notificarConductorAsignado(viaje: Viaje): Promise<void> {
-    if (!viaje.conductor_id || !viaje.cliente_id) return;
-
+  async notificarConductorAsignado(params: {
+    telefono: string;
+    conductor: { nombre: string; vehiculo_placa?: string; vehiculo_color?: string };
+    etaMinutos: number;
+    pin: string;
+  }): Promise<void> {
     try {
-      const [conductor, cliente] = await Promise.all([
-        this.conductorRepo.buscarPorId(viaje.conductor_id),
-        this.clienteRepo.buscarPorId(viaje.cliente_id)
-      ]);
-
-      if (!cliente || !conductor) {
-        console.warn(`[WspNotif] No se pudo notificar asignación: Cliente o Conductor no encontrados.`);
-        return;
-      }
-
       const mensaje = BotResponseBuilder.mensajeConductorAsignado({
-        conductor,
-        etaMinutos: 5, // Valor base, podría calcularse dinámicamente en el futuro
-        pin: viaje.pin_verificacion || '00'
+        conductor: params.conductor,
+        etaMinutos: params.etaMinutos,
+        pin: params.pin
       });
 
       await this.whatsappRepo.enviarMensaje({
-        telefono: cliente.telefono,
+        telefono: params.telefono,
         texto: mensaje
       });
 
-      console.log(`[WspNotif] ✅ Notificación de ASIGNADO enviada a ${cliente.telefono}`);
+      console.log(`[WspNotif] ✅ ASIGNADO enviada a ${params.telefono}`);
     } catch (error: any) {
       console.error(`[WspNotif] ❌ Error notificando asignación:`, error.message);
     }
@@ -52,45 +41,45 @@ export class WhatsappNotificationService {
   /**
    * Notifica al cliente que el conductor ha llegado al punto de recogida.
    */
-  async notificarConductorLlegado(viaje: Viaje): Promise<void> {
-    if (!viaje.cliente_id) return;
-
+  async notificarConductorLlegado(telefono: string): Promise<void> {
     try {
-      const cliente = await this.clienteRepo.buscarPorId(viaje.cliente_id);
-      if (!cliente) return;
-
-      const mensaje = BotResponseBuilder.mensajeConductorLlegado();
-
       await this.whatsappRepo.enviarMensaje({
-        telefono: cliente.telefono,
-        texto: mensaje
+        telefono,
+        texto: BotResponseBuilder.mensajeConductorLlegado()
       });
-
-      console.log(`[WspNotif] ✅ Notificación de LLEGADA enviada a ${cliente.telefono}`);
+      console.log(`[WspNotif] ✅ LLEGADA enviada a ${telefono}`);
     } catch (error: any) {
       console.error(`[WspNotif] ❌ Error notificando llegada:`, error.message);
     }
   }
+
   /**
-   * Notifica al cliente que el viaje ha comenzado oficialmente.
+   * Notifica al cliente que el viaje ha comenzado.
    */
-  async notificarViajeIniciado(viaje: Viaje): Promise<void> {
-    if (!viaje.cliente_id) return;
-
+  async notificarViajeIniciado(telefono: string): Promise<void> {
     try {
-      const cliente = await this.clienteRepo.buscarPorId(viaje.cliente_id);
-      if (!cliente) return;
-
-      const mensaje = BotResponseBuilder.mensajeViajeIniciado();
-
       await this.whatsappRepo.enviarMensaje({
-        telefono: cliente.telefono,
-        texto: mensaje
+        telefono,
+        texto: BotResponseBuilder.mensajeViajeIniciado()
       });
-
-      console.log(`[WspNotif] ✅ Notificación de INICIO DE VIAJE enviada a ${cliente.telefono}`);
+      console.log(`[WspNotif] ✅ INICIO DE VIAJE enviada a ${telefono}`);
     } catch (error: any) {
-      console.error(`[WspNotif] ❌ Error notificando inicio de viaje:`, error.message);
+      console.error(`[WspNotif] ❌ Error notificando inicio:`, error.message);
+    }
+  }
+
+  /**
+   * Túnel de chat inverso: Conductor → Cliente vía WhatsApp.
+   */
+  async notificarMensajeConductor(telefono: string, contenido: string): Promise<void> {
+    try {
+      await this.whatsappRepo.enviarMensaje({
+        telefono,
+        texto: { type: 'text', text: { body: `💬 *Conductor dice:*\n${contenido}` } }
+      });
+      console.log(`[WspNotif] ✅ Mensaje de conductor reenviado a ${telefono}`);
+    } catch (error: any) {
+      console.error(`[WspNotif] ❌ Error reenviando mensaje:`, error.message);
     }
   }
 }

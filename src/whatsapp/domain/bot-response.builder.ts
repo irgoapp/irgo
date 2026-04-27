@@ -249,4 +249,78 @@ export class BotResponseBuilder {
       },
     };
   }
+
+  // ═══════════════════════════════════════════════
+  // RAMA 2: Mensajes para viaje activo
+  // ═══════════════════════════════════════════════
+
+  static mensajeEstadoBuscando(): InteractiveMessage {
+    return {
+      type: 'interactive',
+      interactive: {
+        type: 'button',
+        body: {
+          text: '🔍 *Estamos buscando un conductor cerca de ti...*\n\nEspera un momento, te avisaremos apenas uno acepte.',
+        },
+        action: {
+          buttons: [
+            { type: 'reply', reply: { id: 'cancelar_viaje', title: '❌ Cancelar' } },
+          ],
+        },
+      },
+    };
+  }
+
+  static mensajeEstadoAsignado(): InteractiveMessage {
+    return {
+      type: 'interactive',
+      interactive: {
+        type: 'button',
+        body: {
+          text: '🚗 *Tu conductor está en camino al punto de recogida.*\n\nPuedes enviarle un mensaje si necesitas indicarle algo.',
+        },
+        action: {
+          buttons: [
+            { type: 'reply', reply: { id: 'hablar_conductor', title: '💬 Hablar' } },
+            { type: 'reply', reply: { id: 'cancelar_viaje', title: '❌ Cancelar' } },
+          ],
+        },
+      },
+    };
+  }
+
+  static mensajeEstadoLlegado(): InteractiveMessage {
+    return {
+      type: 'interactive',
+      interactive: {
+        type: 'button',
+        body: {
+          text: '📍 *Tu conductor ya llegó al punto de recogida.*\n\nPor favor acércate a la unidad.',
+        },
+        action: {
+          buttons: [
+            { type: 'reply', reply: { id: 'hablar_conductor', title: '💬 Hablar' } },
+            { type: 'reply', reply: { id: 'cancelar_viaje', title: '❌ Cancelar' } },
+          ],
+        },
+      },
+    };
+  }
+
+  static mensajeEstadoEnCurso(): InteractiveMessage {
+    return {
+      type: 'interactive',
+      interactive: {
+        type: 'button',
+        body: {
+          text: '🛣️ *Tu viaje está en curso.*\n\n¡Disfruta el trayecto con IrGo!',
+        },
+        action: {
+          buttons: [
+            { type: 'reply', reply: { id: 'emergencia', title: '🚨 Emergencia' } },
+          ],
+        },
+      },
+    };
+  }
 }

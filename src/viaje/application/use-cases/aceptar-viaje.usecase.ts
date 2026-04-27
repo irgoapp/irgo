@@ -75,7 +75,8 @@ export class AceptarViajeUseCase {
 
     // 6. Notificaciones
     emitirViajeTomado(viaje.id!);
-    this.whatsappNotification.notificarConductorAsignado(viaje);
+    // WhatsApp notification is now handled by the bot's RAMA 2
+    // when the client sends a message and the bot detects estado = 'asignado'
 
     viaje.estado = 'asignado';
     viaje.conductor_id = dto.conductor_id;
