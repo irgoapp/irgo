@@ -1,8 +1,10 @@
-import { IViajeRepository } from '../../domain/viaje.repository';
-import { emitirViajeCancelado } from '../../../shared/socket.handler';
+import { MovimientoService } from '../../../movimiento/application/services/movimiento.service';
 
 export class CancelarViajeUseCase {
-  constructor(private viajeRepository: IViajeRepository) {}
+  constructor(
+    private viajeRepository: IViajeRepository,
+    private movimientoService: MovimientoService
+  ) {}
 
   async execute(dto: { viaje_id: string; motivo: string; cancelado_por: 'cliente' | 'conductor' }): Promise<boolean> {
     const viaje = await this.viajeRepository.buscarPorId(dto.viaje_id);
@@ -15,6 +17,12 @@ export class CancelarViajeUseCase {
 
     const exito = await this.viajeRepository.actualizarEstado(dto.viaje_id, 'cancelado');
     
+    // REEMBOLSO: Si el viaje tenía un conductor asignado, devolvemos la comisión
+    if (exito && viaje.conductor_id) {
+       console.log(`[CancelarViaje] Reembolsando comisión a conductor ${viaje.conductor_id} por cancelación del viaje ${viaje.id}`);
+       await this.movimientoService.procesarReembolsoComision(viaje.conductor_id, viaje.id!);
+    }
+
     if (exito && dto.cancelado_por === 'cliente') {
        // 📢 LIMPIEZA DE EVENTOS: Notificar a conductores que el cliente canceló
        emitirViajeCancelado(dto.viaje_id);

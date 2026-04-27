@@ -10,6 +10,7 @@ import { mapaControllerPlugin } from './mapa/presentation/mapa.controller';
 import { whatsappControllerPlugin } from './whatsapp/presentation/whatsapp.controller';
 import { authControllerPlugin } from './auth/presentation/auth.controller';
 import { clienteControllerPlugin } from './cliente/presentation/cliente.controller';
+import { movimientoControllerPlugin } from './movimiento/presentation/movimiento.controller';
 
 const fastify = Fastify({ logger: true });
 
@@ -29,6 +30,7 @@ fastify.register(mapaControllerPlugin, { prefix: '/mapa' });
 fastify.register(whatsappControllerPlugin, { prefix: '/whatsapp' });
 fastify.register(authControllerPlugin, { prefix: '/auth' });
 fastify.register(clienteControllerPlugin, { prefix: '/cliente' });
+fastify.register(movimientoControllerPlugin, { prefix: '/movimiento' });
 
 const start = async () => {
   // 1. Forzamos la lectura de la variable que inyecta Railway

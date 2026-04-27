@@ -4,14 +4,15 @@ import { IViajeRepository } from '../../domain/viaje.repository';
 import { IConductorRepository } from '../../../conductor/domain/conductor.repository';
 import { ConsultarRutaMapaUseCase } from '../../../mapa/application/use-cases/consultar-ruta-mapa.usecase';
 import { emitirViajeTomado } from '../../../shared/socket.handler';
-import { WhatsappNotificationService } from '../../../whatsapp/application/services/whatsapp-notification.service';
+import { MovimientoService } from '../../../movimiento/application/services/movimiento.service';
 
 export class AceptarViajeUseCase {
   constructor(
     private viajeRepository: IViajeRepository,
     private conductorRepository: IConductorRepository,
     private consultarRutaMapa: ConsultarRutaMapaUseCase,
-    private whatsappNotification: WhatsappNotificationService
+    private whatsappNotification: WhatsappNotificationService,
+    private movimientoService: MovimientoService
   ) {}
 
   async execute(dto: AceptarViajeDto): Promise<Viaje> {
@@ -24,6 +25,11 @@ export class AceptarViajeUseCase {
     if (viaje.estado !== 'buscando') {
       throw new Error('EL_VIAJE_YA_NO_ESTA_DISPONIBLE');
     }
+
+    // 0. COBRO DE COMISIÓN (Bloqueo preventivo de saldo)
+    // Extraemos el monto directamente del viaje (ya calculado previamente)
+    const montoComision = viaje.monto_comision || 0;
+    await this.movimientoService.procesarCobroComision(dto.conductor_id, viaje.id!, montoComision);
 
     // 1. Obtener ubicación del conductor que aceptó
     const conductor = await this.conductorRepository.buscarPorId(dto.conductor_id);
