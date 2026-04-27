@@ -27,7 +27,7 @@ fastify.register(conductorControllerPlugin, { prefix: '/api/conductor' });
 fastify.register(viajeControllerPlugin, { prefix: '/api/viaje' });
 fastify.register(precioControllerPlugin, { prefix: '/api/precio' });
 fastify.register(mapaControllerPlugin, { prefix: '/api/mapa' });
-fastify.register(whatsappControllerPlugin, { prefix: '/api/whatsapp' });
+fastify.register(whatsappControllerPlugin, { prefix: '/whatsapp' });
 fastify.register(authControllerPlugin, { prefix: '/api/auth' });
 fastify.register(clienteControllerPlugin, { prefix: '/api/cliente' });
 fastify.register(movimientoControllerPlugin, { prefix: '/api/movimiento' });
