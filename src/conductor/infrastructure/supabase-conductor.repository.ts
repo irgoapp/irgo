@@ -5,27 +5,26 @@ import { supabaseClient } from '../../shared/supabase.client';
 export class SupabaseConductorRepository implements IConductorRepository {
   
   async buscarPorId(id: string): Promise<Conductor | null> {
-    // Usamos RPC para evitar el conflicto con la columna 'ubicacion' EWKB
-    const { data, error } = await supabaseClient.rpc('obtener_conductor_por_id', { 
-      id_conductor: id 
-    });
+    const { data, error } = await supabaseClient
+      .from('conductores')
+      .select('id, nombre, disponible, tipo_vehiculo, vehiculo_placa, vehiculo_color, vehiculo_marca, vehiculo_modelo, calificacion, ultima_ubicacion_at')
+      .eq('id', id)
+      .maybeSingle();
 
     if (error || !data) {
-      console.warn(`[Repository] Conductor ${id} no encontrado o error en RPC:`, error);
+      console.warn(`[Repository] Conductor ${id} no encontrado:`, error?.message);
       return null;
     }
 
-    // La RPC ya nos devuelve lat y lon como números planos
-    const d = Array.isArray(data) ? data[0] : data;
-    
     return new Conductor({
-      id: d.id,
-      disponible: d.disponible,
-      tipo_vehiculo: d.tipo_vehiculo,
-      ubicacion_actual: { lat: d.lat, lng: d.lon }, // La DB devuelve 'lon', mapeamos a 'lng'
-      ultima_ubicacion_at: d.ultima_ubicacion_at
+      id: data.id,
+      disponible: data.disponible,
+      tipo_vehiculo: data.tipo_vehiculo,
+      calificacion: data.calificacion,
+      ultima_ubicacion_at: data.ultima_ubicacion_at
     });
   }
+
 
   async actualizarUbicacion(id: string, lat: number, lng: number): Promise<boolean> {
     const { error } = await supabaseClient.rpc('actualizar_ubicacion_conductor', {
