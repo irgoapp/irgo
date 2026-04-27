@@ -14,54 +14,65 @@ export class AceptarViajeUseCase {
     private consultarRutaMapa: ConsultarRutaMapaUseCase,
     private whatsappNotification: WhatsappNotificationService,
     private movimientoService: MovimientoService
-  ) {}
+  ) { }
 
   async execute(dto: AceptarViajeDto): Promise<Viaje> {
     dto.validar();
 
     const viaje = await this.viajeRepository.buscarPorId(dto.viaje_id);
     if (!viaje) throw new Error('Viaje no encontrado');
-    
-    // 1. Obtener ubicación del conductor que aceptó
-    const conductor = await this.conductorRepository.buscarPorId(dto.conductor_id);
-    let rutaRecogida: any[] = [];
 
-    if (conductor && conductor.ubicacion_actual && conductor.ubicacion_actual.lat) {
+    // 1. OBTENER ESTADO DE ACEPTACIÓN (Optimizado con RPC)
+    const { data: estado, error: errorEstado } = await supabaseClient.rpc('obtener_estado_aceptacion', {
+      p_conductor_id: dto.conductor_id,
+      p_viaje_id: dto.viaje_id
+    });
+
+    if (errorEstado || !estado || estado.length === 0) {
+      console.error('[AceptarViaje] Error al obtener estado:', errorEstado);
+      throw new Error('No se pudo obtener el estado del conductor o el viaje');
+    }
+
+    const info = estado[0];
+    
+    // 2. VALIDACIÓN DE SALDO
+    const montoComision = viaje.monto_comision || 0;
+    if (info.conductor_saldo < montoComision) {
+      throw new Error('Saldo insuficiente para aceptar este viaje');
+    }
+
+    // 3. CÁLCULO DE RUTA DE RECOGIDA
+    let rutaRecogida: any[] = [];
+    if (info.conductor_lat && info.conductor_lng) {
       try {
-        console.log(`[AceptarViaje] Calculando ruta_recogida desde (${conductor.ubicacion_actual.lat}, ${conductor.ubicacion_actual.lng}) hasta origen cliente`);
+        console.log(`[AceptarViaje] Calculando ruta desde (${info.conductor_lat}, ${info.conductor_lng})`);
         const mapaRecogida = await this.consultarRutaMapa.execute({
-          origen: conductor.ubicacion_actual,
-          destino: viaje.origen
+          origen: { lat: info.conductor_lat, lng: info.conductor_lng },
+          destino: { lat: info.cliente_origen_lat, lng: info.cliente_origen_lng }
         });
         if (mapaRecogida.geojson?.features) {
           rutaRecogida = mapaRecogida.geojson.features.flatMap((f: any) => f.geometry.coordinates);
         }
       } catch (e) {
-        console.error(`[AceptarViaje] ❌ Error calculando ruta recogida:`, e);
+        console.error(`[AceptarViaje] Error calculando ruta:`, e);
       }
     }
 
-    // 2. ASIGNACIÓN ATÓMICA (Intentar ganar el viaje)
-    // Solo se asignará si el estado sigue siendo 'buscando' (bloqueo en base de datos)
+    // 4. ASIGNACIÓN ATÓMICA
     const exitoAsignacion = await this.viajeRepository.asignarConductor(viaje.id!, dto.conductor_id, rutaRecogida);
 
     if (!exitoAsignacion) {
       throw new Error('EL_VIAJE_YA_NO_ESTA_DISPONIBLE');
     }
 
-    // 2. COBRO DE COMISIÓN (Solo si ya ganamos el viaje)
+    // 5. COBRO DE COMISIÓN
     try {
-      const montoComision = viaje.monto_comision || 0;
       await this.movimientoService.procesarCobroComision(dto.conductor_id, viaje.id!, montoComision);
     } catch (error: any) {
-      // Si falla el cobro (ej: se quedó sin saldo en ese instante), 
-      // opcionalmente podríamos revertir la asignación, pero por ahora lo dejamos asignado 
-      // y lanzamos el error para que el driver sepa que debe recargar.
-      console.error(`[AceptarViaje] Error en cobro tras asignación: ${error.message}`);
-      throw error;
+      console.error(`[AceptarViaje] Error en cobro: ${error.message}`);
     }
 
-    // 3. Notificaciones
+    // 6. Notificaciones
     emitirViajeTomado(viaje.id!);
     this.whatsappNotification.notificarConductorAsignado(viaje);
 
