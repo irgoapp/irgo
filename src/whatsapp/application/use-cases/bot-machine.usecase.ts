@@ -77,7 +77,7 @@ export class BotMachineUseCase {
       case ESTADOS_SESION.INICIO:
       case ESTADOS_SESION.ESPERANDO_UBICACION:
         if (message.type === 'location' && message.lat && message.lng) {
-          await this.handleLocation.execute(session, message.lat, message.lng);
+          await this.handleLocation.execute(session, message.lat, message.lng, clienteId!);
         } else {
           await this.handleStart.execute(telefono);
         }

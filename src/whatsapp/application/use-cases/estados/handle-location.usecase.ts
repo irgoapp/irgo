@@ -15,12 +15,12 @@ export class HandleLocationUseCase {
     private iniciarBorradorViaje: any // Inyectado desde el Controller
   ) {}
 
-  async execute(session: SesionWhatsApp, lat: number, lng: number): Promise<void> {
+  async execute(session: SesionWhatsApp, lat: number, lng: number, clienteId: string): Promise<void> {
     try {
       const tipoVehiculo = session.contexto?.tipo_vehiculo || 'moto';
 
       const dto = new IniciarViajeInDto({
-        cliente_id: '',
+        cliente_id: clienteId,
         origen: { lat, lng },
         tipo_vehiculo: tipoVehiculo
       });
