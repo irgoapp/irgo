@@ -38,6 +38,8 @@ fastify.register(precioControllerPlugin, { prefix: '/precio' });
 fastify.register(mapaControllerPlugin, { prefix: '/mapa' });
 fastify.register(whatsappControllerPlugin, { prefix: '/whatsapp' });
 fastify.register(clienteControllerPlugin, { prefix: '/cliente' });
+import { configControllerPlugin } from './services/config.controller';
+fastify.register(configControllerPlugin, { prefix: '/api/config' });
 
 const start = async () => {
   // 1. Forzamos la lectura de la variable que inyecta Railway
