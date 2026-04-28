@@ -41,8 +41,8 @@ export class ConfirmarViajeClienteUseCase {
     });
 
     const montoComision = await this.calcularComisionUseCase.execute({
-        distancia_ruta: mapa.distancia_ruta,
-        tipo_vehiculo: viaje.tipo_vehiculo
+      distancia_ruta: mapa.distancia_ruta,
+      tipo_vehiculo: viaje.tipo_vehiculo
     });
 
     // 3. Actualizamos el objeto viaje con los datos finales
@@ -58,7 +58,7 @@ export class ConfirmarViajeClienteUseCase {
 
     // Aplanamos coordenadas para el historial
     if (mapa.geojson?.features) {
-        viaje.ruta = mapa.geojson.features.flatMap((f: any) => f.geometry.coordinates);
+      viaje.ruta = mapa.geojson.features.flatMap((f: any) => f.geometry.coordinates);
     }
 
     const actualizado = await this.viajeRepository.actualizar(viaje);
@@ -90,11 +90,11 @@ export class ConfirmarViajeClienteUseCase {
     // B. Registramos en la Sala de Ofertas (Control de cancelaciones)
     const ids = conductores.map(c => c.id!).filter(id => !!id);
     await this.salaOfertasRepo.crear(new SalaViajeOferta({
-        viaje_id: viaje.id,
-        cliente_id: viaje.cliente_id,
-        enviado_conductores_id: ids,
-        numero_conductores: ids.length,
-        estado_oferta: 'enviada'
+      viaje_id: viaje.id,
+      cliente_id: viaje.cliente_id,
+      enviado_conductores_id: ids,
+      numero_conductores: ids.length,
+      estado_oferta: 'enviada'
     }));
 
     // C. Emitimos sockets a cada conductor

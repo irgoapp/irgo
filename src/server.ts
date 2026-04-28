@@ -15,6 +15,17 @@ import { movimientoControllerPlugin } from './movimiento/presentation/movimiento
 const fastify = Fastify({ logger: true });
 
 fastify.register(cors);
+fastify.register(import('@fastify/rate-limit'), {
+  max: 100,
+  timeWindow: '1 minute',
+  errorResponseBuilder: (request, context) => {
+    return {
+      statusCode: 429,
+      error: 'Too Many Requests',
+      message: `Has realizado demasiadas solicitudes. Por favor, intenta de nuevo en ${context.after}.`
+    }
+  }
+});
 fastify.setErrorHandler(errorHandler);
 
 // Health Check oficial para Railway
