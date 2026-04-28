@@ -105,12 +105,17 @@ export class ConfirmarViajeClienteUseCase {
     }
 
     // RONDA 1: Los 5 más cercanos
-    await this.ejecutarRonda(viajeId, 5, 0, rutaCoords, tiempoEstimado);
+    const montoComision = await this.calcularComisionUseCase.execute({
+      distancia_ruta: viajeActual.distancia_ruta || 0,
+      tipo_vehiculo: viajeActual.tipo_vehiculo
+    });
+
+    await this.ejecutarRonda(viajeId, 5, 0, rutaCoords, tiempoEstimado, montoComision);
 
     // ESPERA 10 SEGUNDOS
     setTimeout(async () => {
       // RONDA 2: Los siguientes 10
-      await this.ejecutarRonda(viajeId, 10, 5, rutaCoords, tiempoEstimado);
+      await this.ejecutarRonda(viajeId, 10, 5, rutaCoords, tiempoEstimado, montoComision);
 
       // ESPERA FINAL PARA EXPIRACIÓN (Opcional, pero recomendado para cerrar modales)
       setTimeout(async () => {
@@ -123,8 +128,8 @@ export class ConfirmarViajeClienteUseCase {
     }, 10000);
   }
 
-  private async ejecutarRonda(viajeId: string, limite: number, offset: number, ruta: any[], tiempoEstimado: number) {
-    console.log(`[MatchingEngine] Ejecutando Ronda (L:${limite}, O:${offset}) para viaje ${viajeId}`);
+  private async ejecutarRonda(viajeId: string, limite: number, offset: number, ruta: any[], tiempoEstimado: number, montoComision: number) {
+    console.log(`[MatchingEngine] Ejecutando Ronda (L:${limite}, O:${offset}) para viaje ${viajeId}. Comision: ${montoComision}`);
     const viaje = await this.viajeRepository.buscarPorId(viajeId);
 
     if (!viaje || viaje.estado !== 'buscando') {
@@ -138,7 +143,8 @@ export class ConfirmarViajeClienteUseCase {
       5, // Radio 5km para mayor alcance
       viaje.tipo_vehiculo,
       limite,
-      offset
+      offset,
+      montoComision // Filtro nativo en Supabase
     );
 
     console.log(`[MatchingEngine] Conductores encontrados para tipo ${viaje.tipo_vehiculo}: ${conductores.length}`);
@@ -152,11 +158,7 @@ export class ConfirmarViajeClienteUseCase {
       if (!cond.id || !cond.ubicacion_actual) continue;
 
       const precioCliente = viaje.monto_ruta!;
-      const comision = await this.calcularComisionUseCase.execute({
-        distancia_ruta: viaje.distancia_ruta || 0,
-        tipo_vehiculo: viaje.tipo_vehiculo
-      });
-      const gananciaDriver = precioCliente - comision;
+      const gananciaDriver = precioCliente - montoComision;
 
       const oferta = new OfertaViajeConductorDto(
         viaje,

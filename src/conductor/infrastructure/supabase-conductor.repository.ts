@@ -57,14 +57,16 @@ export class SupabaseConductorRepository implements IConductorRepository {
     radioKm: number,
     tipoVehiculo?: string,
     limite: number = 10,
-    offset: number = 0
+    offset: number = 0,
+    montoComision: number = 0
   ): Promise<Conductor[]> {
-    // 1. LLAMADA RPC OPTIMIZADA: Ahora pasamos el tipo de vehículo directamente a la DB
+    // 1. LLAMADA RPC OPTIMIZADA: Ahora pasamos el tipo de vehículo y el monto de comisión directamente a la DB
     const { data: drivers, error } = await supabaseClient.rpc('conductores_cercanos', {
       p_lat: lat,
       p_lng: lng,
       p_radio: radioKm * 1000,
-      p_tipo_vehiculo: tipoVehiculo // Se agrega este parámetro para filtrado nativo
+      p_tipo_vehiculo: tipoVehiculo,
+      p_monto_comision: montoComision // Usamos el nombre consistente
     });
 
     if (error) {
