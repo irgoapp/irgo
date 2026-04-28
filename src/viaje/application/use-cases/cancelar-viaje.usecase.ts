@@ -14,7 +14,7 @@ export class CancelarViajeUseCase {
     private salaOfertasRepo: ISalaViajeOfertaRepository
   ) {}
 
-  async execute(dto: { viaje_id: string; motivo: string; cancelado_por: 'cliente' | 'conductor' }): Promise<boolean> {
+  async execute(dto: { viaje_id: string; motivo: string; cancelado_por: 'cliente' | 'conductor' | 'sistema' }): Promise<boolean> {
     const viaje = await this.viajeRepository.buscarPorId(dto.viaje_id);
     if (!viaje) throw new Error('Viaje no encontrado');
 
@@ -23,11 +23,8 @@ export class CancelarViajeUseCase {
       throw new Error('El viaje ya no puede ser cancelado');
     }
 
-    // Mapeamos el "cancelado_por" para que sea más descriptivo si es cliente
-    const canceladoPorLabel = dto.cancelado_por === 'cliente' ? 'cancelado por cliente' : 'cancelado por conductor';
-
     const exito = await this.viajeRepository.actualizarEstado(dto.viaje_id, 'cancelado', {
-        cancelado_por: canceladoPorLabel,
+        cancelado_por: dto.cancelado_por,
         cancelado_motivo: dto.motivo
     });
     
