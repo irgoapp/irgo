@@ -71,6 +71,23 @@ export class AceptarViajeUseCase {
     // --- ACTUALIZACIÓN DE SALA DE OFERTAS ---
     await this.salaOfertasRepo.actualizarEstado(viaje.id!, 'aceptada', dto.conductor_id);
 
+    // --- LIMPIEZA PARA EL RESTO DE CONDUCTORES ---
+    try {
+        const sala = await this.salaOfertasRepo.buscarPorViajeId(dto.viaje_id);
+        if (sala && sala.enviado_conductores_id.length > 0) {
+            // Filtramos al ganador para no cerrarle su propia pantalla
+            const otrosConductores = sala.enviado_conductores_id.filter(id => id !== dto.conductor_id);
+            console.log(`[AceptarViaje] Limpiando oferta para ${otrosConductores.length} conductores que perdieron`);
+            
+            for (const condId of otrosConductores) {
+                const { emitirLimpiezaDeOferta } = await import('../../../shared/socket.handler');
+                emitirLimpiezaDeOferta(condId, viaje.id!);
+            }
+        }
+    } catch (error) {
+        console.error(`[AceptarViaje] Error en limpieza de ofertas concurrentes:`, error);
+    }
+
     // 5. COBRO DE COMISIÓN
     try {
       await this.movimientoService.procesarCobroComision(dto.conductor_id, viaje.id!, montoComision);
