@@ -7,6 +7,7 @@ export const ESTADOS_SESION = {
   ESPERANDO_UBICACION: 'ESPERANDO_UBICACION',
   ESPERANDO_DESTINO: 'ESPERANDO_DESTINO',
   CONFIRMANDO_VIAJE: 'CONFIRMANDO_VIAJE',
+  CANCELADO: 'CANCELADO',
 } as const;
 
 export interface SesionWhatsApp {
@@ -21,10 +22,11 @@ export interface SesionWhatsApp {
     tipo_vehiculo?: string;
   };
   ultima_actividad?: string;
+  finalizado_at?: string;
 }
 
 export interface ISessionRepository {
   getSession(telefono: string): Promise<SesionWhatsApp | null>;
-  upsertSession(telefono: string, estado: string, contexto: any): Promise<boolean>;
+  upsertSession(telefono: string, estado: string, contexto: any, finalizado_at?: string): Promise<boolean>;
   deleteSession(telefono: string): Promise<boolean>;
 }

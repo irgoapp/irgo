@@ -7,6 +7,8 @@ import { ViajeResponseDto } from '../dto/out/viaje-response.dto';
 import { ConsultarRutaMapaUseCase } from '../../../mapa/application/use-cases/consultar-ruta-mapa.usecase';
 import { CalcularClientePrecioUseCase } from '../../../precio/application/use-cases/calcular-cliente-precio.usecase';
 import { CalcularComisionUseCase } from '../../../precio/application/use-cases/calcular-comision.usecase';
+import { ISalaViajeOfertaRepository } from '../../domain/sala-viaje-oferta.repository';
+import { SalaViajeOferta } from '../../domain/sala-viaje-oferta.entity';
 
 export class ConfirmarViajeClienteUseCase {
   constructor(
@@ -14,7 +16,8 @@ export class ConfirmarViajeClienteUseCase {
     private conductorRepository: IConductorRepository,
     private consultarRutaMapa: ConsultarRutaMapaUseCase,
     private calcularClientePrecio: CalcularClientePrecioUseCase,
-    private calcularComisionUseCase: CalcularComisionUseCase
+    private calcularComisionUseCase: CalcularComisionUseCase,
+    private salaOfertasRepo: ISalaViajeOfertaRepository
   ) { }
 
   async execute(dto: ConfirmarViajeDto): Promise<ViajeResponseDto> {
@@ -63,14 +66,16 @@ export class ConfirmarViajeClienteUseCase {
 
     let rutaCoords: any[] = [];
     let tiempoEstimado = 10;
+    let viajeActual: any = null;
+
     try {
-      const v = await this.viajeRepository.buscarPorId(viajeId);
-      if (v) {
+      viajeActual = await this.viajeRepository.buscarPorId(viajeId);
+      if (viajeActual) {
         // RUTA PRINCIPAL: Origen -> Destino del cliente
         const mapa = await this.consultarRutaMapa.execute({ 
-          origen: v.origen, 
-          destino: v.destino,
-          tipo_vehiculo: v.tipo_vehiculo
+          origen: viajeActual.origen, 
+          destino: viajeActual.destino,
+          tipo_vehiculo: viajeActual.tipo_vehiculo
         });
         tiempoEstimado = mapa.tiempo_ruta || 10;
 
@@ -79,13 +84,24 @@ export class ConfirmarViajeClienteUseCase {
           rutaCoords = mapa.geojson.features.flatMap((f: any) => f.geometry.coordinates);
 
           // PERSISTENCIA: Guardamos la ruta del viaje (origen -> destino)
-          v.ruta = rutaCoords;
-          v.tiempo_ruta = tiempoEstimado;
-          await this.viajeRepository.actualizar(v);
+          viajeActual.ruta = rutaCoords;
+          viajeActual.tiempo_ruta = tiempoEstimado;
+          await this.viajeRepository.actualizar(viajeActual);
         }
       }
     } catch (e) {
       console.error("[MatchingEngine] Error obteniendo ruta origen->destino:", e);
+    }
+
+    // --- SALA DE OFERTAS: Inicialización ---
+    if (viajeActual) {
+        await this.salaOfertasRepo.crear(new SalaViajeOferta({
+            viaje_id: viajeId,
+            cliente_id: viajeActual.cliente_id,
+            enviado_conductores_id: [],
+            numero_conductores: 0,
+            estado_oferta: 'enviada'
+        }));
     }
 
     // RONDA 1: Los 5 más cercanos
@@ -126,6 +142,11 @@ export class ConfirmarViajeClienteUseCase {
     );
 
     console.log(`[MatchingEngine] Conductores encontrados para tipo ${viaje.tipo_vehiculo}: ${conductores.length}`);
+
+    if (conductores.length > 0) {
+        const ids = conductores.map(c => c.id!).filter(id => !!id);
+        await this.salaOfertasRepo.agregarConductores(viajeId, ids);
+    }
 
     for (const cond of conductores) {
       if (!cond.id || !cond.ubicacion_actual) continue;

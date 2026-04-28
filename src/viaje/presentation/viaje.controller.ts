@@ -27,6 +27,9 @@ import { MovimientoService } from '../../movimiento/application/services/movimie
 import { emitTripUpdate } from '../../shared/socket.handler';
 import { SupabaseViajeMensajesRepository } from '../../whatsapp/infrastructure/supabase-viaje-mensajes.repository';
 import { ViajeMensaje } from '../../whatsapp/domain/viaje-mensajes.entity';
+import { SupabaseWspSessionRepository } from '../../whatsapp/infrastructure/supabase-wsp-session.repository';
+import { SupabaseSalaViajeOfertaRepository } from '../infrastructure/supabase-sala-viaje-oferta.repository';
+import { CerrarViajeUseCase } from '../application/use-cases/cerrar-viaje.usecase';
 
 // Repositorios e inyección cruzada por dependencias
 const viajeRepository = new SupabaseViajeRepository();
@@ -36,6 +39,8 @@ const precioRepository = new SupabasePrecioRepository();
 const clienteRepository = new SupabaseClienteRepository();
 const whatsappRepository = new WhatsappMetaClient();
 const viajeMensajesRepo = new SupabaseViajeMensajesRepository();
+const sessionRepository = new SupabaseWspSessionRepository();
+const salaOfertasRepository = new SupabaseSalaViajeOfertaRepository();
 
 // Casos de Uso y Servicios
 const movimientoRepository = new SupabaseMovimientoRepository();
@@ -48,10 +53,11 @@ const calcularClientePrecioUseCase = new CalcularClientePrecioUseCase(precioRepo
 const calcularComisionUseCase = new CalcularComisionUseCase(precioRepository);
 
 const solicitarViajeUseCase = new SolicitarViajeUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase, calcularClientePrecioUseCase, clienteRepository);
-const aceptarViajeUseCase = new AceptarViajeUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase, whatsappNotificationService, movimientoService);
+const aceptarViajeUseCase = new AceptarViajeUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase, whatsappNotificationService, movimientoService, salaOfertasRepository);
 const cotizarViajeUseCase = new CotizarViajeUseCase(consultarRutaMapaUseCase, calcularClientePrecioUseCase);
-const confirmarViajeClienteUseCase = new ConfirmarViajeClienteUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase, calcularClientePrecioUseCase, calcularComisionUseCase);
-const cancelarViajeUseCase = new CancelarViajeUseCase(viajeRepository, movimientoService);
+const confirmarViajeClienteUseCase = new ConfirmarViajeClienteUseCase(viajeRepository, conductorRepository, consultarRutaMapaUseCase, calcularClientePrecioUseCase, calcularComisionUseCase, salaOfertasRepository);
+const cancelarViajeUseCase = new CancelarViajeUseCase(viajeRepository, movimientoService, clienteRepository, sessionRepository, salaOfertasRepository);
+const cerrarViajeUseCase = new CerrarViajeUseCase(viajeRepository, salaOfertasRepository);
 const obtenerViajeUseCase = new ObtenerViajeUseCase(viajeRepository);
 const calificarViajeUseCase = new CalificarViajeUseCase(viajeRepository);
 const marcarLlegadaUseCase = new MarcarLlegadaUseCase(viajeRepository, whatsappNotificationService);

@@ -183,6 +183,17 @@ export function emitirViajeCancelado(viajeId: string) {
 }
 
 /**
+ * Notifica a un conductor específico que debe cerrar el modal de una oferta (ej: por cancelación)
+ */
+export function emitirLimpiezaDeOferta(conductorId: string, viajeId: string) {
+  if (ioInstance) {
+    const sala = `conductor_${conductorId}`;
+    ioInstance.to(sala).emit('limpiar_oferta', { viaje_id: viajeId });
+    console.log(`[Sockets] 🧹 limpiar_oferta enviada a conductor ${conductorId} para viaje ${viajeId}`);
+  }
+}
+
+/**
  * Notifica que el tiempo de búsqueda expiró sin encontrar conductores.
  */
 export function emitirViajeExpirado(viajeId: string) {

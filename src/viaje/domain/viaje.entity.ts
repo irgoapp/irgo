@@ -20,6 +20,8 @@ export class Viaje {
   iniciado_at?: Date;
   completado_at?: Date;
   cancelado_at?: Date;
+  cancelado_por?: string;
+  cancelado_motivo?: string;
   ruta?: any[];
   ruta_recogida?: any[];
   pin_verificacion?: string;
@@ -46,6 +48,8 @@ export class Viaje {
     this.iniciado_at = data.iniciado_at ? new Date(data.iniciado_at) : undefined;
     this.completado_at = data.completado_at ? new Date(data.completado_at) : undefined;
     this.cancelado_at = data.cancelado_at ? new Date(data.cancelado_at) : undefined;
+    this.cancelado_por = data.cancelado_por;
+    this.cancelado_motivo = data.cancelado_motivo;
     this.ruta = data.ruta;
     this.ruta_recogida = data.ruta_recogida;
     this.pin_verificacion = data.pin_verificacion;

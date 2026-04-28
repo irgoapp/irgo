@@ -3,28 +3,29 @@ import { Conductor } from '../domain/conductor.entity';
 import { supabaseClient } from '../../shared/supabase.client';
 
 export class SupabaseConductorRepository implements IConductorRepository {
-  
+
   async buscarPorId(id: string): Promise<Conductor | null> {
-    const { data, error } = await supabaseClient
-      .from('conductores')
-      .select('id, nombre, disponible, tipo_vehiculo, vehiculo_placa, vehiculo_color, vehiculo_marca, vehiculo_modelo, calificacion, ultima_ubicacion_at')
-      .eq('id', id)
-      .maybeSingle();
+    // Usamos RPC para evitar el conflicto con la columna 'ubicacion' EWKB
+    const { data, error } = await supabaseClient.rpc('obtener_conductor_por_id', {
+      id_conductor: id
+    });
 
     if (error || !data) {
-      console.warn(`[Repository] Conductor ${id} no encontrado:`, error?.message);
+      console.warn(`[Repository] Conductor ${id} no encontrado o error en RPC:`, error);
       return null;
     }
 
+    // La RPC ya nos devuelve lat y lon como números planos
+    const d = Array.isArray(data) ? data[0] : data;
+
     return new Conductor({
-      id: data.id,
-      disponible: data.disponible,
-      tipo_vehiculo: data.tipo_vehiculo,
-      calificacion: data.calificacion,
-      ultima_ubicacion_at: data.ultima_ubicacion_at
+      id: d.id,
+      disponible: d.disponible,
+      tipo_vehiculo: d.tipo_vehiculo,
+      ubicacion_actual: { lat: d.lat, lng: d.lon }, // La DB devuelve 'lon', mapeamos a 'lng'
+      ultima_ubicacion_at: d.ultima_ubicacion_at
     });
   }
-
 
   async actualizarUbicacion(id: string, lat: number, lng: number): Promise<boolean> {
     const { error } = await supabaseClient.rpc('actualizar_ubicacion_conductor', {
@@ -32,7 +33,7 @@ export class SupabaseConductorRepository implements IConductorRepository {
       p_lat: lat,
       p_lng: lng
     });
-    
+
     if (error) {
       console.error(`[Repository] Error al actualizar ubicación con RPC:`, error);
       throw new Error(error.message);
@@ -51,9 +52,9 @@ export class SupabaseConductorRepository implements IConductorRepository {
   }
 
   async buscarCercanosDisponibles(
-    lat: number, 
-    lng: number, 
-    radioKm: number, 
+    lat: number,
+    lng: number,
+    radioKm: number,
     tipoVehiculo?: string,
     limite: number = 10,
     offset: number = 0
@@ -70,13 +71,13 @@ export class SupabaseConductorRepository implements IConductorRepository {
       console.error("[Repository] Error en RPC conductores_cercanos:", error);
       throw new Error(error.message);
     }
-    
+
     // 2. MAPEO DIRECTO: Eliminamos el .filter() manual. 
     // La DB ya nos entrega solo lo que necesitamos.
     const slice = (drivers || []).slice(offset, offset + limite);
     return slice.map((d: any) => new Conductor({
       id: d.id,
-      disponible: true, 
+      disponible: true,
       tipo_vehiculo: d.tipo_vehiculo,
       ubicacion_actual: { lat: d.lat || d.origen_lat, lng: d.lng || d.lon || d.origen_lng }, // Soporte multi-campo
       ultima_ubicacion_at: d.ultima_ubicacion_at

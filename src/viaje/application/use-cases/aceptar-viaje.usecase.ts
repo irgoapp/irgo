@@ -7,6 +7,7 @@ import { emitirViajeTomado } from '../../../shared/socket.handler';
 import { MovimientoService } from '../../../movimiento/application/services/movimiento.service';
 import { WhatsappNotificationService } from '../../../whatsapp/application/services/whatsapp-notification.service';
 import { supabaseClient } from '../../../shared/supabase.client';
+import { ISalaViajeOfertaRepository } from '../../domain/sala-viaje-oferta.repository';
 
 export class AceptarViajeUseCase {
   constructor(
@@ -14,7 +15,8 @@ export class AceptarViajeUseCase {
     private conductorRepository: IConductorRepository,
     private consultarRutaMapa: ConsultarRutaMapaUseCase,
     private whatsappNotification: WhatsappNotificationService,
-    private movimientoService: MovimientoService
+    private movimientoService: MovimientoService,
+    private salaOfertasRepo: ISalaViajeOfertaRepository
   ) { }
 
   async execute(dto: AceptarViajeDto): Promise<Viaje> {
@@ -65,6 +67,9 @@ export class AceptarViajeUseCase {
     if (!exitoAsignacion) {
       throw new Error('EL_VIAJE_YA_NO_ESTA_DISPONIBLE');
     }
+
+    // --- ACTUALIZACIÓN DE SALA DE OFERTAS ---
+    await this.salaOfertasRepo.actualizarEstado(viaje.id!, 'aceptada', dto.conductor_id);
 
     // 5. COBRO DE COMISIÓN
     try {

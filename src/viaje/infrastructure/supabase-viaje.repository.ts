@@ -28,7 +28,7 @@ export class SupabaseViajeRepository implements IViajeRepository {
     return this.mapToEntity(data);
   }
 
-  async actualizarEstado(id: string, estado: string): Promise<boolean> {
+  async actualizarEstado(id: string, estado: string, metadata?: { cancelado_por?: string, cancelado_motivo?: string }): Promise<boolean> {
     const updatePayload: any = { estado };
     const now = new Date().toISOString();
 
@@ -37,7 +37,11 @@ export class SupabaseViajeRepository implements IViajeRepository {
     if (estado === 'llegado') updatePayload.llegado_at = now;
     if (estado === 'en_curso') updatePayload.iniciado_at = now;
     if (estado === 'completado') updatePayload.completado_at = now;
-    if (estado === 'cancelado') updatePayload.cancelado_at = now;
+    if (estado === 'cancelado') {
+      updatePayload.cancelado_at = now;
+      if (metadata?.cancelado_por) updatePayload.cancelado_por = metadata.cancelado_por;
+      if (metadata?.cancelado_motivo) updatePayload.cancelado_motivo = metadata.cancelado_motivo;
+    }
 
     const { error } = await supabaseClient
       .from('solicitudes')
@@ -87,6 +91,8 @@ export class SupabaseViajeRepository implements IViajeRepository {
       iniciado_at: v.iniciado_at?.toISOString(),
       completado_at: v.completado_at?.toISOString(),
       cancelado_at: v.cancelado_at?.toISOString(),
+      cancelado_por: v.cancelado_por,
+      cancelado_motivo: v.cancelado_motivo,
       ruta: v.ruta,
       ruta_recogida: v.ruta_recogida,
       pin_verificacion: v.pin_verificacion
@@ -116,6 +122,8 @@ export class SupabaseViajeRepository implements IViajeRepository {
       iniciado_at: data.iniciado_at,
       completado_at: data.completado_at,
       cancelado_at: data.cancelado_at,
+      cancelado_por: data.cancelado_por,
+      cancelado_motivo: data.cancelado_motivo,
       ruta: data.ruta,
       ruta_recogida: data.ruta_recogida,
       pin_verificacion: data.pin_verificacion

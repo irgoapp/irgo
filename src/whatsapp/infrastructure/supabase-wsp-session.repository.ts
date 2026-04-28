@@ -29,16 +29,22 @@ export class SupabaseWspSessionRepository implements ISessionRepository {
     }
   }
 
-  async upsertSession(telefono: string, estado: string, contexto: any): Promise<boolean> {
+  async upsertSession(telefono: string, estado: string, contexto: any, finalizado_at?: string): Promise<boolean> {
     const telfLimpio = this.limpiarTelefono(telefono);
+    const payload: any = {
+      telefono: telfLimpio,
+      estado,
+      contexto,
+      ultima_actividad: new Date().toISOString()
+    };
+
+    if (finalizado_at) {
+      payload.finalizado_at = finalizado_at;
+    }
+
     const { error } = await supabaseClient
       .from('sesiones_whatsapp')
-      .upsert({
-        telefono: telfLimpio,
-        estado,
-        contexto,
-        ultima_actividad: new Date().toISOString()
-      }, { onConflict: 'telefono' });
+      .upsert(payload, { onConflict: 'telefono' });
 
     if (error) {
       console.error(`[SessionRepo] Error al guardar sesión: ${error.message}`);

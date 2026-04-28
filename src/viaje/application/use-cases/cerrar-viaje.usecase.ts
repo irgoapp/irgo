@@ -1,8 +1,12 @@
 import { CerrarViajeDto } from '../dto/in/cerrar-viaje.dto';
 import { IViajeRepository } from '../../domain/viaje.repository';
+import { ISalaViajeOfertaRepository } from '../../domain/sala-viaje-oferta.repository';
 
 export class CerrarViajeUseCase {
-  constructor(private viajeRepository: IViajeRepository) {}
+  constructor(
+    private viajeRepository: IViajeRepository,
+    private salaOfertasRepo: ISalaViajeOfertaRepository
+  ) {}
 
   async execute(dto: CerrarViajeDto) {
     dto.validar();
@@ -13,6 +17,9 @@ export class CerrarViajeUseCase {
 
     viaje.estado = 'completado';
     await this.viajeRepository.actualizarEstado(viaje.id!, 'completado');
+
+    // Marcamos la sala como completada
+    await this.salaOfertasRepo.actualizarEstado(viaje.id!, 'completada');
 
     return viaje;
   }
