@@ -1,4 +1,4 @@
-// v1.0.4 - Fix Crítico de Arranque (Eliminación de posibles bloqueos)
+// v1.0.6 - Healthcheck en /health y Rate Limiting protegido
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 
@@ -9,16 +9,22 @@ const fastify = Fastify({
   trustProxy: true 
 });
 
-// Healthcheck inmediato y síncrono
+// --- 1. HEALTHCHECK (FUERA DE TODO PLUGIN) ---
+// Registrado antes que cualquier otro plugin o middleware
+fastify.get('/health', async () => {
+  return { status: 'ok', message: 'IRGO Backend Is Live', version: '1.0.6' };
+});
+
+// También mantenemos / por compatibilidad momentánea
 fastify.get('/', async () => {
-  return { status: 'ok', message: 'IRGO Backend Is Live', version: '1.0.5' };
+  return { status: 'ok', message: 'IRGO Backend Is Live', version: '1.0.6' };
 });
 
 const start = async () => {
   try {
     console.log('📦 [STARTUP] Cargando dependencias y módulos...');
     
-    // Importaciones dinámicas dentro del start para capturar errores de carga
+    // Importaciones dinámicas
     const { setupSocket } = await import('./shared/socket.handler');
     const { errorHandler } = await import('./shared/error.handler');
     const { conductorControllerPlugin } = await import('./conductor/presentation/conductor.controller');
@@ -33,7 +39,7 @@ const start = async () => {
     await fastify.register(cors);
     fastify.setErrorHandler(errorHandler);
 
-    // 2. Rate Limiting Blindado (Carga Dinámica)
+    // --- 2. RATE LIMITING (Registrado DESPUÉS del Healthcheck) ---
     try {
       const rateLimitPlugin = await import('@fastify/rate-limit');
       await fastify.register(rateLimitPlugin.default || rateLimitPlugin, {
@@ -49,12 +55,12 @@ const start = async () => {
           }
         }
       });
-      console.log('🛡️ [SUCCESS] Rate Limiter activado y protegido.');
+      console.log('🛡️ [SUCCESS] Rate Limiter activado.');
     } catch (rlError) {
-      console.error('⚠️ [WARNING] No se pudo cargar el Rate Limiter, continuando sin él:', rlError);
+      console.error('⚠️ [WARNING] No se pudo cargar el Rate Limiter:', rlError);
     }
 
-    // Registro de rutas
+    // --- 3. REGISTRO DE RUTAS ---
     await fastify.register(conductorControllerPlugin, { prefix: '/api/conductor' });
     await fastify.register(conductorControllerPlugin, { prefix: '/conductor' });
     await fastify.register(viajeControllerPlugin, { prefix: '/api/viaje' });
@@ -63,7 +69,6 @@ const start = async () => {
     await fastify.register(authControllerPlugin, { prefix: '/auth' });
     await fastify.register(configControllerPlugin, { prefix: '/api/config' });
     
-    // Otros módulos
     await fastify.register(precioControllerPlugin, { prefix: '/precio' });
     await fastify.register(mapaControllerPlugin, { prefix: '/mapa' });
     await fastify.register(whatsappControllerPlugin, { prefix: '/whatsapp' });
@@ -75,15 +80,12 @@ const start = async () => {
     console.log(`📡 [STARTUP] Intentando abrir puerto ${PORT} en ${ADDRESS}...`);
     
     await fastify.listen({ port: PORT, host: ADDRESS });
-    
-    // Iniciar Sockets
     setupSocket(fastify.server);
     
     console.log(`✅ [SUCCESS] Servidor escuchando en puerto ${PORT}`);
 
   } catch (err) {
     console.error('💥 [FATAL ERROR] Fallo durante el registro de módulos:', err);
-    // No salimos con 1 inmediatamente para dejar que el log se procese en Railway
     setTimeout(() => process.exit(1), 1000);
   }
 };
