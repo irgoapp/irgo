@@ -11,7 +11,7 @@ const fastify = Fastify({
 
 // Healthcheck inmediato y síncrono
 fastify.get('/', async () => {
-  return { status: 'ok', message: 'IRGO Backend Is Live', version: '1.0.4' };
+  return { status: 'ok', message: 'IRGO Backend Is Live', version: '1.0.5' };
 });
 
 const start = async () => {
@@ -32,6 +32,27 @@ const start = async () => {
 
     await fastify.register(cors);
     fastify.setErrorHandler(errorHandler);
+
+    // 2. Rate Limiting Blindado (Carga Dinámica)
+    try {
+      const rateLimitPlugin = await import('@fastify/rate-limit');
+      await fastify.register(rateLimitPlugin.default || rateLimitPlugin, {
+        max: 100,
+        timeWindow: '1 minute',
+        skipOnError: true,
+        keyGenerator: (req) => req.ip || '127.0.0.1',
+        errorResponseBuilder: (request, context) => {
+          return {
+            statusCode: 429,
+            error: 'Too Many Requests',
+            message: `Has realizado demasiadas solicitudes. Intenta de nuevo en ${context.after}.`
+          }
+        }
+      });
+      console.log('🛡️ [SUCCESS] Rate Limiter activado y protegido.');
+    } catch (rlError) {
+      console.error('⚠️ [WARNING] No se pudo cargar el Rate Limiter, continuando sin él:', rlError);
+    }
 
     // Registro de rutas
     await fastify.register(conductorControllerPlugin, { prefix: '/api/conductor' });
