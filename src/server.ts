@@ -1,8 +1,11 @@
-// v1.0.1 - Estabilidad y Conectividad Maps-API
+// v1.0.2 - Optimización para Despliegue en Railway
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
 import { setupSocket } from './shared/socket.handler';
 import { errorHandler } from './shared/error.handler';
+
+// Importación de Controladores
 import { conductorControllerPlugin } from './conductor/presentation/conductor.controller';
 import { viajeControllerPlugin } from './viaje/presentation/viaje.controller';
 import { precioControllerPlugin } from './precio/presentation/precio.controller';
@@ -11,13 +14,27 @@ import { whatsappControllerPlugin } from './whatsapp/presentation/whatsapp.contr
 import { authControllerPlugin } from './auth/presentation/auth.controller';
 import { clienteControllerPlugin } from './cliente/presentation/cliente.controller';
 import { movimientoControllerPlugin } from './movimiento/presentation/movimiento.controller';
+import { configControllerPlugin } from './services/config.controller';
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ 
+  logger: true,
+  trustProxy: true // Necesario para Railway y Rate Limit
+});
 
+// 1. Middlewares Core
 fastify.register(cors);
-fastify.register(import('@fastify/rate-limit'), {
+
+// 2. Rate Limiting con Exclusión de Healthcheck
+fastify.register(rateLimit, {
   max: 100,
   timeWindow: '1 minute',
+  allowList: ['127.0.0.1'], // Localhost
+  skipOnError: true,
+  // Excluimos el healthcheck para que Railway no sea bloqueado
+  keyGenerator: (request) => {
+    if (request.url === '/') return 'healthcheck'; 
+    return request.ip;
+  },
   errorResponseBuilder: (request, context) => {
     return {
       statusCode: 429,
@@ -26,49 +43,47 @@ fastify.register(import('@fastify/rate-limit'), {
     }
   }
 });
+
 fastify.setErrorHandler(errorHandler);
 
-// Health Check oficial para Railway
+// 3. Health Check oficial para Railway
 fastify.get('/', async () => {
-  return { status: 'ok', message: 'IRGO Backend Is Live' };
+  return { status: 'ok', message: 'IRGO Backend Is Live', version: '1.0.2' };
 });
 
-// Registrar dominios (Soporte Dual para App y Dashboard)
-fastify.register(conductorControllerPlugin, { prefix: '/conductor' });
+// 4. Registro de Dominios
 fastify.register(conductorControllerPlugin, { prefix: '/api/conductor' });
+fastify.register(conductorControllerPlugin, { prefix: '/conductor' });
 
-fastify.register(viajeControllerPlugin, { prefix: '/viaje' });
 fastify.register(viajeControllerPlugin, { prefix: '/api/viaje' });
+fastify.register(viajeControllerPlugin, { prefix: '/viaje' });
 
-fastify.register(authControllerPlugin, { prefix: '/auth' });
 fastify.register(authControllerPlugin, { prefix: '/api/auth' });
+fastify.register(authControllerPlugin, { prefix: '/auth' });
 
-// Módulos específicos
 fastify.register(movimientoControllerPlugin, { prefix: '/api/movimiento' });
 fastify.register(precioControllerPlugin, { prefix: '/precio' });
 fastify.register(mapaControllerPlugin, { prefix: '/mapa' });
 fastify.register(whatsappControllerPlugin, { prefix: '/whatsapp' });
 fastify.register(clienteControllerPlugin, { prefix: '/cliente' });
-import { configControllerPlugin } from './services/config.controller';
 fastify.register(configControllerPlugin, { prefix: '/api/config' });
 
+// 5. Arranque del Servidor
 const start = async () => {
-  // 1. Forzamos la lectura de la variable que inyecta Railway
   const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
-  
-  // 2. Fastify DEBE escuchar en 0.0.0.0 para ser visible en la red de Railway
   const ADDRESS = '0.0.0.0'; 
 
   try {
+    console.log(`🚀 Intentando arrancar servidor en puerto ${PORT}...`);
+    
     await fastify.listen({ port: PORT, host: ADDRESS });
     
-    // DESPUÉS montamos Socket.io sobre el servidor ya activo
+    // Socket.io se monta sobre el servidor HTTP nativo
     setupSocket(fastify.server);
     
-    // CAMBIEN EL LOG PARA ESTAR SEGUROS:
-    console.log(`✅ IRGO ONLINE: Escuchando en el puerto real: ${PORT}`);
+    console.log(`✅ IRGO ONLINE: Escuchando en: http://${ADDRESS}:${PORT}`);
 
-    // Manejo de señales de apagado (Graceful Shutdown)
+    // Manejo de apagado gracioso
     const shutdown = async () => {
       console.log('🛑 Recibida señal de apagado. Cerrando servidor...');
       await fastify.close();
@@ -79,7 +94,7 @@ const start = async () => {
     process.on('SIGINT', shutdown);
 
   } catch (err) {
-    fastify.log.error(err);
+    console.error('❌ Error fatal al iniciar el servidor:', err);
     process.exit(1);
   }
 };
