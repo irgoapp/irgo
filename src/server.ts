@@ -12,12 +12,12 @@ const fastify = Fastify({
 // --- 1. HEALTHCHECK (FUERA DE TODO PLUGIN) ---
 // Registrado antes que cualquier otro plugin o middleware
 fastify.get('/health', async () => {
-  return { status: 'ok', message: 'IRGO Backend Is Live', version: '1.0.6' };
+  return { status: 'ok', message: 'IRGO Backend Is Live', version: '1.0.7' };
 });
 
 // También mantenemos / por compatibilidad momentánea
 fastify.get('/', async () => {
-  return { status: 'ok', message: 'IRGO Backend Is Live', version: '1.0.6' };
+  return { status: 'ok', message: 'IRGO Backend Is Live', version: '1.0.7' };
 });
 
 const start = async () => {
