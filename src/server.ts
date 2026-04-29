@@ -1,93 +1,73 @@
-// v1.0.3 - Depuración de Arranque para Railway
+// v1.0.4 - Fix Crítico de Arranque (Eliminación de posibles bloqueos)
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import rateLimit from '@fastify/rate-limit';
 
-// Log de inicio inmediato
-console.log('🎬 Iniciando IRGO Backend...');
-
-// Importación de Controladores
-import { conductorControllerPlugin } from './conductor/presentation/conductor.controller';
-import { viajeControllerPlugin } from './viaje/presentation/viaje.controller';
-import { precioControllerPlugin } from './precio/presentation/precio.controller';
-import { mapaControllerPlugin } from './mapa/presentation/mapa.controller';
-import { whatsappControllerPlugin } from './whatsapp/presentation/whatsapp.controller';
-import { authControllerPlugin } from './auth/presentation/auth.controller';
-import { clienteControllerPlugin } from './cliente/presentation/cliente.controller';
-import { movimientoControllerPlugin } from './movimiento/presentation/movimiento.controller';
-import { configControllerPlugin } from './services/config.controller';
-import { setupSocket } from './shared/socket.handler';
-import { errorHandler } from './shared/error.handler';
+console.log('🚀 [STARTUP] El proceso de Node ha iniciado correctamente.');
 
 const fastify = Fastify({ 
   logger: true,
   trustProxy: true 
 });
 
-// --- EL HEALTHCHECK DEBE IR ANTES QUE TODO ---
+// Healthcheck inmediato y síncrono
 fastify.get('/', async () => {
-  return { status: 'ok', message: 'IRGO Backend Is Live', version: '1.0.3' };
+  return { status: 'ok', message: 'IRGO Backend Is Live', version: '1.0.4' };
 });
 
 const start = async () => {
   try {
-    // 1. Middlewares Core
-    await fastify.register(cors);
+    console.log('📦 [STARTUP] Cargando dependencias y módulos...');
     
-    // 2. Rate Limiting Simplificado para evitar fallos de arranque
-    await fastify.register(rateLimit, {
-      max: 100,
-      timeWindow: '1 minute',
-      skipOnError: true // Si falla el rate limit, que la app siga viva
-    });
+    // Importaciones dinámicas dentro del start para capturar errores de carga
+    const { setupSocket } = await import('./shared/socket.handler');
+    const { errorHandler } = await import('./shared/error.handler');
+    const { conductorControllerPlugin } = await import('./conductor/presentation/conductor.controller');
+    const { viajeControllerPlugin } = await import('./viaje/presentation/viaje.controller');
+    const { authControllerPlugin } = await import('./auth/presentation/auth.controller');
+    const { configControllerPlugin } = await import('./services/config.controller');
+    const { precioControllerPlugin } = await import('./precio/presentation/precio.controller');
+    const { mapaControllerPlugin } = await import('./mapa/presentation/mapa.controller');
+    const { whatsappControllerPlugin } = await import('./whatsapp/presentation/whatsapp.controller');
+    const { clienteControllerPlugin } = await import('./cliente/presentation/cliente.controller');
 
+    await fastify.register(cors);
     fastify.setErrorHandler(errorHandler);
 
-    // 3. Registro de Dominios
+    // Registro de rutas
     await fastify.register(conductorControllerPlugin, { prefix: '/api/conductor' });
     await fastify.register(conductorControllerPlugin, { prefix: '/conductor' });
-
     await fastify.register(viajeControllerPlugin, { prefix: '/api/viaje' });
     await fastify.register(viajeControllerPlugin, { prefix: '/viaje' });
-
     await fastify.register(authControllerPlugin, { prefix: '/api/auth' });
     await fastify.register(authControllerPlugin, { prefix: '/auth' });
-
-    await fastify.register(movimientoControllerPlugin, { prefix: '/api/movimiento' });
+    await fastify.register(configControllerPlugin, { prefix: '/api/config' });
+    
+    // Otros módulos
     await fastify.register(precioControllerPlugin, { prefix: '/precio' });
     await fastify.register(mapaControllerPlugin, { prefix: '/mapa' });
     await fastify.register(whatsappControllerPlugin, { prefix: '/whatsapp' });
     await fastify.register(clienteControllerPlugin, { prefix: '/cliente' });
-    await fastify.register(configControllerPlugin, { prefix: '/api/config' });
 
-    // 4. Configuración de Puerto y Host (Obligatorio para Railway)
     const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
     const ADDRESS = '0.0.0.0'; 
 
-    console.log(`📡 Intentando escuchar en ${ADDRESS}:${PORT}...`);
+    console.log(`📡 [STARTUP] Intentando abrir puerto ${PORT} en ${ADDRESS}...`);
     
     await fastify.listen({ port: PORT, host: ADDRESS });
     
-    // Socket.io se monta DESPUÉS de que el servidor HTTP esté listo
+    // Iniciar Sockets
     setupSocket(fastify.server);
     
-    console.log(`✅ EXITO: IRGO Backend escuchando en el puerto ${PORT}`);
+    console.log(`✅ [SUCCESS] Servidor escuchando en puerto ${PORT}`);
 
   } catch (err) {
-    console.error('💥 ERROR CRÍTICO EN ARRANQUE:', err);
-    process.exit(1);
+    console.error('💥 [FATAL ERROR] Fallo durante el registro de módulos:', err);
+    // No salimos con 1 inmediatamente para dejar que el log se procese en Railway
+    setTimeout(() => process.exit(1), 1000);
   }
 };
 
-// Manejo de apagado gracioso
-const shutdown = async () => {
-  console.log('🛑 Recibida señal de apagado. Cerrando...');
-  await fastify.close();
-  process.exit(0);
-};
-
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
-
-// Ejecutar
-start();
+start().catch(err => {
+  console.error('💥 [FATAL ERROR] Error no controlado en la promesa de arranque:', err);
+  setTimeout(() => process.exit(1), 1000);
+});
