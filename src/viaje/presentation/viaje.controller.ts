@@ -190,12 +190,12 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
 
   fastify.post('/:id/iniciar', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
     try {
-      const { pin } = request.body as any;
-      console.log(`[ViajeController] 🚕 Conductor intenta iniciar viaje: ${request.params.id} con PIN: ${pin}`);
+      const { pin_verificacion } = request.body as any;
+      console.log(`[ViajeController] 🚕 Conductor intenta iniciar viaje: ${request.params.id} con PIN: ${pin_verificacion}`);
       
       const viaje = await iniciarViajeUseCase.execute({
         viaje_id: request.params.id,
-        pin: pin
+        pin: pin_verificacion
       });
       
       // Notificar al cliente vía WebSockets
