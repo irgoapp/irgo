@@ -21,6 +21,8 @@ export class ViajeResponseDto {
   cancelado_at?: string;
   ruta?: any[];
   ruta_recogida?: any[];
+  cliente_nombre_corto: string;
+  cliente_calificacion: number;
 
   constructor(viaje: Viaje) {
     this.id = viaje.id || '';
@@ -42,6 +44,8 @@ export class ViajeResponseDto {
     this.cancelado_at = viaje.cancelado_at?.toISOString();
     this.ruta = viaje.ruta || [];
     this.ruta_recogida = viaje.ruta_recogida || [];
+    this.cliente_nombre_corto = viaje.cliente?.nombre || 'Cliente IrGo';
+    this.cliente_calificacion = viaje.cliente?.calificacion || 5.0;
 
     // Si hay conductor, preparamos el objeto anidado que busca el frontend
     if (viaje.conductor_id) {
