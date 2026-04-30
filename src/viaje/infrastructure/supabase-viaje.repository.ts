@@ -19,7 +19,7 @@ export class SupabaseViajeRepository implements IViajeRepository {
   async buscarPorId(id: string): Promise<Viaje | null> {
     const { data, error } = await supabaseClient
       .from('solicitudes')
-      .select('*, clientes(nombre, telefono)')
+      .select('*, clientes(nombre, telefono, calificacion)')
       .eq('id', id)
       .single();
 
@@ -126,7 +126,8 @@ export class SupabaseViajeRepository implements IViajeRepository {
       cancelado_motivo: data.cancelado_motivo,
       ruta: data.ruta,
       ruta_recogida: data.ruta_recogida,
-      pin_verificacion: data.pin_verificacion
+      pin_verificacion: data.pin_verificacion,
+      cliente: data.clientes // Mapeamos la relación cargada en buscarPorId
     });
   }
 

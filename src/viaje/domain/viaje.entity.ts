@@ -25,6 +25,7 @@ export class Viaje {
   ruta?: any[];
   ruta_recogida?: any[];
   pin_verificacion?: string;
+  cliente?: any;
 
   constructor(data: Partial<Viaje>) {
     this.id = data.id;
@@ -53,5 +54,6 @@ export class Viaje {
     this.ruta = data.ruta;
     this.ruta_recogida = data.ruta_recogida;
     this.pin_verificacion = data.pin_verificacion;
+    this.cliente = data.cliente;
   }
 }

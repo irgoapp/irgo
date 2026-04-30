@@ -7,6 +7,7 @@ import { Viaje } from '../../../domain/viaje.entity';
  */
 export class OfertaViajeConductorDto {
   viaje_id: string;
+  cliente_id: string;
 
   // Datos Financieros 
   monto_ruta: number;      // Lo que paga el cliente
@@ -39,6 +40,7 @@ export class OfertaViajeConductorDto {
     puntos_ruta?: any[]
   ) {
     this.viaje_id = viaje.id!;
+    this.cliente_id = viaje.cliente_id;
 
     // Financiero
     this.monto_ruta = viaje.monto_ruta || 0;
@@ -60,8 +62,8 @@ export class OfertaViajeConductorDto {
     this.destino_lng = viaje.destino.lng;
     this.destino_texto = viaje.destino_texto || 'Destino no identificado';
 
-    // Cliente
-    this.cliente_nombre_corto = 'Juan P.';
-    this.cliente_calificacion = 4.8;
+    // Cliente (Datos reales desde el objeto cargado en el repo)
+    this.cliente_nombre_corto = viaje.cliente?.nombre || 'Cliente IrGo';
+    this.cliente_calificacion = viaje.cliente?.calificacion || 5.0;
   }
 }
