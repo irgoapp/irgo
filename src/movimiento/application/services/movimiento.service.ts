@@ -95,9 +95,9 @@ export class MovimientoService {
     await this.movimientoRepo.registrarTransaccion(movimiento);
   }
 
-  async consultarBilletera(conductorId: string): Promise<{ saldo: number, movimientos: Movimiento[] }> {
+  async consultarBilletera(conductorId: string): Promise<{ saldo: number, moneda: string, movimientos: Movimiento[] }> {
     const saldo = await this.movimientoRepo.obtenerSaldo(conductorId);
     const movimientos = await this.movimientoRepo.obtenerHistorial(conductorId, 20);
-    return { saldo, movimientos };
+    return { saldo, moneda: 'Bs', movimientos };
   }
 }
