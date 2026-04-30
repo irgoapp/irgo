@@ -68,7 +68,17 @@ export class CancelarViajeUseCase {
                 );
             }
         } catch (error) {
-            console.error(`[CancelarViaje] Error sincronizando sesión de WhatsApp:`, error);
+            console.error(`[CancelarViaje] Error sincronizando sesión de WhatsApp:`, error.message);
+        }
+
+        // 🚨 PENALIZACIÓN: Si el cliente cancela un viaje ya asignado, incrementamos su contador
+        if (viaje.conductor_id && dto.cancelado_por === 'cliente') {
+            try {
+                console.log(`[CancelarViaje] Penalizando a cliente ${viaje.cliente_id} por cancelación de viaje asignado`);
+                await this.clienteRepo.incrementarCancelaciones(viaje.cliente_id);
+            } catch (error: any) {
+                console.error(`[CancelarViaje] Error al penalizar cliente:`, error.message);
+            }
         }
     }
 

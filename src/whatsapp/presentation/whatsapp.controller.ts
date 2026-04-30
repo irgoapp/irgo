@@ -96,6 +96,18 @@ export async function whatsappControllerPlugin(fastify: FastifyInstance, options
       // Paso A: Buscar/Crear cliente por teléfono
       const cliente = await getOrCreateCliente.execute({ telefono: dto.telefono });
 
+      // 🚨 CONTROL DE PENALIZACIONES (EL PORTERO)
+      if (cliente.suspendido_hasta && cliente.suspendido_hasta > new Date()) {
+          console.warn(`[Webhook] Cliente ${dto.telefono} intentó usar el servicio pero está SUSPENDIDO hasta ${cliente.suspendido_hasta}`);
+          
+          // Notificamos al cliente vía WhatsApp
+          await whatsappRepo.enviarTexto(dto.telefono, 
+              `⚠️ *Cuenta Suspendida Temporalmente*\n\nLo sentimos, tu cuenta ha sido suspendida debido a múltiples cancelaciones consecutivas de viajes asignados.\n\nPodrás volver a solicitar viajes después de: *${cliente.suspendido_hasta.toLocaleString()}*`
+          );
+          
+          return reply.code(200).send(new WhatsappResponseDto('client_suspended'));
+      }
+
       // Ejecutar BotMachine con el clienteId resuelto
       await botMachine.execute(dto.telefono, cliente.id || null, {
         type: dto.type,

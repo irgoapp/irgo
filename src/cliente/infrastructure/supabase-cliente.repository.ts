@@ -40,4 +40,32 @@ export class SupabaseClienteRepository implements IClienteRepository {
     if (error) throw new Error(error.message);
     return new Cliente(data);
   }
+
+  async incrementarCancelaciones(id: string): Promise<void> {
+    // Usamos una consulta atómica de incremento si es posible, 
+    // o en su defecto un RPC si el usuario lo tiene configurado.
+    // Como no tenemos certeza del RPC, usamos la lógica de lectura/escritura 
+    // o un query directo si el cliente lo permite.
+    const { data: current } = await supabaseClient
+      .from('clientes')
+      .select('cancelaciones_consecutivas')
+      .eq('id', id)
+      .single();
+
+    const { error } = await supabaseClient
+      .from('clientes')
+      .update({ cancelaciones_consecutivas: (current?.cancelaciones_consecutivas || 0) + 1 })
+      .eq('id', id);
+
+    if (error) throw new Error(error.message);
+  }
+
+  async resetearCancelaciones(id: string): Promise<void> {
+    const { error } = await supabaseClient
+      .from('clientes')
+      .update({ cancelaciones_consecutivas: 0 })
+      .eq('id', id);
+
+    if (error) throw new Error(error.message);
+  }
 }
