@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } f
 import { SolicitarViajeDto } from '../application/dto/in/solicitar-viaje.dto';
 import { ConfirmarViajeDto } from '../application/dto/in/confirmar-viaje.dto';
 import { AceptarViajeDto } from '../application/dto/in/aceptar-viaje.dto';
+import { CerrarViajeDto } from '../application/dto/in/cerrar-viaje.dto';
 import { ViajeResponseDto } from '../application/dto/out/viaje-response.dto';
 import { SolicitarViajeUseCase } from '../application/use-cases/solicitar-viaje.usecase';
 import { AceptarViajeUseCase } from '../application/use-cases/aceptar-viaje.usecase';
