@@ -49,8 +49,8 @@ export class CancelarViajeUseCase {
                 // Marcamos la sala como cancelada
                 await this.salaOfertasRepo.actualizarEstado(dto.viaje_id, 'cancelada');
             }
-        } catch (error) {
-            console.error(`[CancelarViaje] Error limpiando sala de ofertas:`, error);
+        } catch (error: any) {
+            console.error(`[CancelarViaje] Error limpiando sala de ofertas:`, error.message);
         }
     }
 
@@ -67,7 +67,7 @@ export class CancelarViajeUseCase {
                     new Date().toISOString()
                 );
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error(`[CancelarViaje] Error sincronizando sesión de WhatsApp:`, error.message);
         }
 

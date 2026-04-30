@@ -101,9 +101,10 @@ export async function whatsappControllerPlugin(fastify: FastifyInstance, options
           console.warn(`[Webhook] Cliente ${dto.telefono} intentó usar el servicio pero está SUSPENDIDO hasta ${cliente.suspendido_hasta}`);
           
           // Notificamos al cliente vía WhatsApp
-          await whatsappRepo.enviarTexto(dto.telefono, 
-              `⚠️ *Cuenta Suspendida Temporalmente*\n\nLo sentimos, tu cuenta ha sido suspendida debido a múltiples cancelaciones consecutivas de viajes asignados.\n\nPodrás volver a solicitar viajes después de: *${cliente.suspendido_hasta.toLocaleString()}*`
-          );
+          await whatsappRepo.enviarMensaje({ 
+              telefono: dto.telefono, 
+              texto: `⚠️ *Cuenta Suspendida Temporalmente*\n\nLo sentimos, tu cuenta ha sido suspendida debido a múltiples cancelaciones consecutivas de viajes asignados.\n\nPodrás volver a solicitar viajes después de: *${cliente.suspendido_hasta.toLocaleString()}*`
+          });
           
           return reply.code(200).send(new WhatsappResponseDto('client_suspended'));
       }
