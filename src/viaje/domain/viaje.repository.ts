@@ -7,4 +7,5 @@ export interface IViajeRepository {
   actualizarEstado(id: string, estado: string, metadata?: { cancelado_por?: string, cancelado_motivo?: string }): Promise<boolean>;
   asignarConductor(id: string, conductorId: string, rutaRecogida?: any[]): Promise<boolean>;
   obtenerHistorial(conductorId: string): Promise<any[]>;
+  buscarActivoPorConductor(conductorId: string): Promise<Viaje | null>;
 }

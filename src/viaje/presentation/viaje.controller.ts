@@ -13,6 +13,7 @@ import { ObtenerViajeUseCase } from '../application/use-cases/obtener-viaje.usec
 import { CalificarViajeUseCase } from '../application/use-cases/calificar-viaje.usecase';
 import { MarcarLlegadaUseCase } from '../application/use-cases/marcar-llegada.usecase';
 import { IniciarViajeUseCase } from '../application/use-cases/iniciar-viaje.usecase';
+import { ObtenerViajeActivoUseCase } from '../application/use-cases/obtener-viaje-activo.usecase';
 import { SupabaseViajeRepository } from '../infrastructure/supabase-viaje.repository';
 import { SupabaseConductorRepository } from '../../conductor/infrastructure/supabase-conductor.repository';
 import { ConsultarRutaMapaUseCase } from '../../mapa/application/use-cases/consultar-ruta-mapa.usecase';
@@ -63,6 +64,7 @@ const obtenerViajeUseCase = new ObtenerViajeUseCase(viajeRepository);
 const calificarViajeUseCase = new CalificarViajeUseCase(viajeRepository);
 const marcarLlegadaUseCase = new MarcarLlegadaUseCase(viajeRepository, whatsappNotificationService);
 const iniciarViajeUseCase = new IniciarViajeUseCase(viajeRepository, whatsappNotificationService);
+const obtenerViajeActivoUseCase = new ObtenerViajeActivoUseCase(viajeRepository);
 
 export async function viajeControllerPlugin(fastify: FastifyInstance, options: FastifyPluginOptions) {
   
@@ -82,6 +84,20 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
       return reply.code(200).send(viaje);
     } catch (error: any) {
       return reply.code(404).send({ error: error.message });
+    }
+  });
+
+  // Endpoint de Supervivencia: Recuperar viaje activo para el Driver
+  fastify.get('/activo/:conductor_id', async (request: FastifyRequest<{ Params: { conductor_id: string } }>, reply: FastifyReply) => {
+    try {
+      const viaje = await obtenerViajeActivoUseCase.execute(request.params.conductor_id);
+      if (!viaje) {
+        return reply.code(404).send({ message: 'No hay viajes activos para este conductor' });
+      }
+      return reply.code(200).send(new ViajeResponseDto(viaje));
+    } catch (error: any) {
+      console.error(`[ViajeController] ❌ Error recuperando viaje activo para conductor ${request.params.conductor_id}:`, error.message);
+      return reply.code(400).send({ error: error.message });
     }
   });
 

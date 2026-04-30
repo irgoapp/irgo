@@ -162,4 +162,18 @@ export class SupabaseViajeRepository implements IViajeRepository {
     if (error) throw new Error(error.message);
     return data || [];
   }
+
+  async buscarActivoPorConductor(conductorId: string): Promise<Viaje | null> {
+    const { data, error } = await supabaseClient
+      .from('solicitudes')
+      .select('*, clientes(nombre, telefono, calificacion)')
+      .eq('conductor_id', conductorId)
+      .in('estado', ['asignado', 'llegado', 'en_curso'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return this.mapToEntity(data);
+  }
 }
