@@ -212,6 +212,29 @@ export async function viajeControllerPlugin(fastify: FastifyInstance, options: F
     }
   });
 
+  // Endpoints para Finalizar / Completar Viaje
+  const finalizarHandler = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+    try {
+      const dto = new CerrarViajeDto({ 
+        viaje_id: request.params.id, 
+        ...(request.body as any) 
+      });
+      
+      const viaje = await cerrarViajeUseCase.execute(dto);
+      
+      // Notificar al cliente vía WebSockets
+      emitTripUpdate(request.params.id, viaje);
+
+      return reply.code(200).send(new ViajeResponseDto(viaje));
+    } catch (error: any) {
+      console.error(`[ViajeController] ❌ Error finalizando viaje ${request.params.id}:`, error.message);
+      return reply.code(400).send({ error: error.message });
+    }
+  };
+
+  fastify.post('/:id/finalizar', finalizarHandler);
+  fastify.post('/:id/completar', finalizarHandler);
+
   fastify.post('/:id/calificar', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
     try {
       const { rating } = request.body as any;
