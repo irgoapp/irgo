@@ -35,6 +35,7 @@ const start = async () => {
     const { mapaControllerPlugin } = await import('./mapa/presentation/mapa.controller');
     const { whatsappControllerPlugin } = await import('./whatsapp/presentation/whatsapp.controller');
     const { clienteControllerPlugin } = await import('./cliente/presentation/cliente.controller');
+    const { movimientoControllerPlugin } = await import('./movimiento/presentation/movimiento.controller');
 
     await fastify.register(cors);
     fastify.setErrorHandler(errorHandler);
@@ -73,6 +74,9 @@ const start = async () => {
     await fastify.register(mapaControllerPlugin, { prefix: '/mapa' });
     await fastify.register(whatsappControllerPlugin, { prefix: '/whatsapp' });
     await fastify.register(clienteControllerPlugin, { prefix: '/cliente' });
+    
+    await fastify.register(movimientoControllerPlugin, { prefix: '/api/movimiento' });
+    await fastify.register(movimientoControllerPlugin, { prefix: '/movimiento' });
 
     const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
     const ADDRESS = '0.0.0.0'; 
