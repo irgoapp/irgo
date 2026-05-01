@@ -38,10 +38,11 @@ export async function conductorControllerPlugin(fastify: FastifyInstance, option
   });
 
   // Endpoint GET para obtener el historial limpio
-  fastify.get('/:id/historial', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+  fastify.get('/:id/historial', async (request: FastifyRequest<{ Params: { id: string }, Querystring: { filtro?: string } }>, reply: FastifyReply) => {
     try {
-      const historial = await consultarHistorialUseCase.execute(request.params.id);
-      return reply.code(200).send(historial);
+      const { filtro } = request.query;
+      const data = await consultarHistorialUseCase.execute(request.params.id, filtro);
+      return reply.code(200).send(data);
     } catch (error: any) {
       return reply.code(400).send({ error: error.message });
     }

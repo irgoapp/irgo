@@ -151,16 +151,41 @@ export class SupabaseViajeRepository implements IViajeRepository {
     return true;
   }
 
-  async obtenerHistorial(conductorId: string): Promise<any[]> {
-    const { data, error } = await supabaseClient
+  async obtenerHistorial(conductorId: string, filtro?: { inicio?: string, fin?: string }): Promise<{ metricas: any, historial: any[] }> {
+    // 1. Obtener Métricas vía RPC
+    const { data: metricas, error: errorMetricas } = await supabaseClient.rpc('obtener_metricas_historial', {
+      p_conductor_id: conductorId,
+      p_fecha_inicio: filtro?.inicio || null,
+      p_fecha_fin: filtro?.fin || null
+    });
+
+    if (errorMetricas) {
+        console.error('[SupabaseViajeRepository] Error en RPC metricas:', errorMetricas.message);
+    }
+
+    // 2. Obtener Historial Filtrado
+    let query = supabaseClient
       .from('solicitudes')
-      .select('id, origen_texto, destino_texto, estado, created_at, distancia_ruta, monto_conductor')
-      .eq('conductor_id', conductorId)
+      .select('id, origen_texto, destino_texto, estado, created_at, completado_at, distancia_ruta, monto_conductor')
+      .eq('conductor_id', conductorId);
+
+    if (filtro?.inicio) {
+        query = query.gte('completado_at', filtro.inicio);
+    }
+    if (filtro?.fin) {
+        query = query.lte('completado_at', filtro.fin);
+    }
+
+    const { data: historial, error: errorHistorial } = await query
       .order('created_at', { ascending: false })
       .limit(50);
 
-    if (error) throw new Error(error.message);
-    return data || [];
+    if (errorHistorial) throw new Error(errorHistorial.message);
+
+    return {
+        metricas: metricas || { viajes: 0, distancia: 0, total: 0 },
+        historial: historial || []
+    };
   }
 
   async buscarActivoPorConductor(conductorId: string): Promise<Viaje | null> {
